@@ -84,17 +84,65 @@ func (authn *WebAuthn) FinishSignUp(user types.User, req *http.Request) (*types.
 	}
 	resp := &types.FinishSignInResp{}
 	err = httpxResp.Scan(resp)
-	return nil, nil
+	return resp, nil
 }
 
 // StartSignIn start login
 func (authn *WebAuthn) StartSignIn(user types.User, req *http.Request) (*types.StartSignInResp, error) {
-	return authn.StartSignUp(user, req)
+	if req == nil {
+		return nil, errors.New("sdk: http.Request is nil, please specify")
+	}
+	data, err := io.ReadAll(req.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer req.Body.Close()
+
+	// json unmarshal
+	input := types.StartSignInReq{}
+	err = json.Unmarshal(data, &input)
+	if err != nil {
+		return nil, err
+	}
+	input.Username = user.Name()
+	input.DisplayName = user.DisplayName()
+
+	data, err = json.Marshal(input)
+	if err != nil {
+		return nil, err
+	}
+	sig := authn.sess.Sign(data)
+	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", bytes.NewReader(data))
+	httpxReq.AddHeader("Authenrization", sig)
+	httpxResp, err := authn.client.Do(httpxReq)
+	if err != nil {
+		return nil, err
+	}
+	resp := &types.StartSignInResp{}
+	err = httpxResp.Scan(resp)
+	return resp, err
 }
 
 // FinishSignIn finish login
 func (authn *WebAuthn) FinishSignIn(user types.User, req *http.Request) (*types.FinishSignInResp, error) {
-	return authn.FinishSignUp(user, req)
+	if req == nil {
+		return nil, errors.New("sdk: http.Request is nil, please specify")
+	}
+	data, err := io.ReadAll(req.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	sig := authn.sess.Sign(data)
+	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", bytes.NewReader(data))
+	httpxReq.AddHeader("Authenrization", sig)
+	httpxResp, err := authn.client.Do(httpxReq)
+	if err != nil {
+		return nil, err
+	}
+	resp := &types.FinishSignInResp{}
+	err = httpxResp.Scan(resp)
+	return resp, nil
 }
 
 // DeleteCredential delete exists credential
