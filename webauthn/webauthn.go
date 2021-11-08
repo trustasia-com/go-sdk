@@ -3,6 +3,7 @@ package webauthn
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -33,6 +34,10 @@ func (authn *WebAuthn) StartSignUp(user User, req *http.Request) (*StartSignUpRe
 	if req == nil {
 		return nil, errors.New("sdk: http.Request is nil, please specify")
 	}
+	if user == nil {
+		return nil, errors.New("sdk: user is nil, please specify")
+	}
+	loc := "fido/" + hex.EncodeToString(user.ID())
 	data, err := io.ReadAll(req.Body)
 	if err != nil {
 		return nil, err
@@ -53,7 +58,7 @@ func (authn *WebAuthn) StartSignUp(user User, req *http.Request) (*StartSignUpRe
 		return nil, err
 	}
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preregister", bytes.NewReader(data))
-	authn.sess.SignWithRequest(httpxReq, data)
+	authn.sess.SignWithRequest(httpxReq, loc, data)
 	httpxResp, err := authn.client.Do(httpxReq)
 	if err != nil {
 		return nil, err
@@ -64,7 +69,7 @@ func (authn *WebAuthn) StartSignUp(user User, req *http.Request) (*StartSignUpRe
 }
 
 // FinishSignUp registration process
-func (authn *WebAuthn) FinishSignUp(user User, req *http.Request) (*FinishSignInResp, error) {
+func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignInResp, error) {
 	if req == nil {
 		return nil, errors.New("sdk: http.Request is nil, please specify")
 	}
@@ -74,7 +79,7 @@ func (authn *WebAuthn) FinishSignUp(user User, req *http.Request) (*FinishSignIn
 	}
 
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preregister", bytes.NewReader(data))
-	authn.sess.SignWithRequest(httpxReq, data)
+	authn.sess.SignWithRequest(httpxReq, "fido", data)
 	httpxResp, err := authn.client.Do(httpxReq)
 	if err != nil {
 		return nil, err
@@ -108,8 +113,12 @@ func (authn *WebAuthn) StartSignIn(user User, req *http.Request) (*StartSignInRe
 	if err != nil {
 		return nil, err
 	}
+	var loc string
+	if user != nil {
+		loc = "fido/" + hex.EncodeToString(user.ID())
+	}
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", bytes.NewReader(data))
-	authn.sess.SignWithRequest(httpxReq, data)
+	authn.sess.SignWithRequest(httpxReq, loc, data)
 	httpxResp, err := authn.client.Do(httpxReq)
 	if err != nil {
 		return nil, err
@@ -120,7 +129,7 @@ func (authn *WebAuthn) StartSignIn(user User, req *http.Request) (*StartSignInRe
 }
 
 // FinishSignIn finish login
-func (authn *WebAuthn) FinishSignIn(user User, req *http.Request) (*FinishSignInResp, error) {
+func (authn *WebAuthn) FinishSignIn(req *http.Request) (*FinishSignInResp, error) {
 	if req == nil {
 		return nil, errors.New("sdk: http.Request is nil, please specify")
 	}
@@ -128,9 +137,8 @@ func (authn *WebAuthn) FinishSignIn(user User, req *http.Request) (*FinishSignIn
 	if err != nil {
 		return nil, err
 	}
-
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/authenticate", bytes.NewReader(data))
-	authn.sess.SignWithRequest(httpxReq, data)
+	authn.sess.SignWithRequest(httpxReq, "fido", data)
 	httpxResp, err := authn.client.Do(httpxReq)
 	if err != nil {
 		return nil, err

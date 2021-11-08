@@ -19,6 +19,7 @@ func init() {
 	sess, err := credentials.New(credentials.Options{
 		AccessKey: "test",
 		SecretKey: "secret",
+		Endpoint:  "http://localhost:9000",
 	}, false)
 	if err != nil {
 		panic(err)

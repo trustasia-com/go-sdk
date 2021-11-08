@@ -16,8 +16,8 @@ var (
 func init() {
 	var err error
 	sess, err = New(Options{
-		AccessKey: "id",
-		SecretKey: "hello",
+		AccessKey: "accessKey",
+		SecretKey: "secretKey",
 	}, false)
 	if err != nil {
 		panic(err)
@@ -33,12 +33,12 @@ func TestSession_SignWithRequest(t *testing.T) {
 	// get
 	payload := "page=1&page_size=10"
 	req := httpx.NewRequest(http.MethodGet, "/?"+payload, nil)
-	sess.SignWithRequest(req, []byte(payload))
+	sess.SignWithRequest(req, "id", []byte(payload))
 	t.Log(req)
 
 	// post
 	payload = `{"page":1,"page_size":10}`
 	req = httpx.NewRequest(http.MethodPost, "/", strings.NewReader(payload))
-	sess.SignWithRequest(req, []byte(payload))
+	sess.SignWithRequest(req, "id", []byte(payload))
 	t.Log(req)
 }

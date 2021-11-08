@@ -18,17 +18,6 @@ const (
 	endpointProd = "https://api.wekey.com"
 )
 
-// http header
-const (
-	httpHeaderDate        = "X-WeKey-Date"
-	httpHeaderAlgorithm   = "X-WeKey-Algorithm"
-	httpHeaderAccessKey   = "X-WeKey-AccessKey"
-	httpHeaderContentHash = "X-WeKey-Content-Hash"
-	httpHeaderSignature   = "X-WeKey-Signature"
-
-	httpHeaderAuthorization = "Authorization"
-)
-
 // SignatureType is type of Authorization requested for a given request.
 type SignatureType int
 
@@ -78,14 +67,14 @@ func (sess *Session) Sign(data []byte) string {
 }
 
 // SignWithRequest sign & set request header
-func (sess *Session) SignWithRequest(req *httpx.Request, payload []byte) {
+func (sess *Session) SignWithRequest(req *httpx.Request, location string, payload []byte) {
 	var signer Signer
 	switch sess.Options.SignerType {
 
 	default:
 		signer = SignerDefault
 	}
-	signer(req, sess.Options.AccessKey, sess.Options.SecretKey, payload)
+	signer(req, sess.Options.AccessKey, sess.Options.SecretKey, location, payload)
 }
 
 // ValidateSig validate the authorization

@@ -2,7 +2,9 @@
 package credentials
 
 import (
-	"net/url"
+	"net/http"
+	"sort"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -15,32 +17,43 @@ const (
 	iso8601DateFormat = "20060102T150405Z"
 )
 
+// http header
+const (
+	httpHeaderDate        = "X-WeKey-Date"
+	httpHeaderCredential  = "X-WeKey-Credential"
+	httpHeaderContentHash = "X-WeKey-Content-Hash"
+	httpHeader
+
+	httpHeaderAuthorization = "Authorization"
+)
+
 // Signer sign the request before Do()
-type Signer func(req *httpx.Request, accessKey, secretKey string, payload []byte)
+type Signer func(req *httpx.Request, accessKey, secretKey, location string, payload []byte)
 
 // Validator validate the request data
 type Validator func(resp *httpx.Response, secretKey string, payload []byte) error
 
 // SignerDefault signatureDefault signer
-//   query
 //   payload: query or body
 //   header
-func SignerDefault(req *httpx.Request, accessKey, secretKey string, payload []byte) {
-	// init time
+func SignerDefault(req *httpx.Request, accessKey, secretKey, location string, payload []byte) {
+	// set headers
 	now := time.Now().UTC()
 
+	req.SetHeader(httpHeaderCredential, accessKey+"/"+location)
+	req.SetHeader(httpHeaderDate, now.Format(iso8601DateFormat))
 	hash := sum256(payload)
+	req.SetHeader(httpHeaderContentHash, hash)
 
-	vals := url.Values{}
-	vals.Set(httpHeaderDate, now.Format(iso8601DateFormat))
-	vals.Set(httpHeaderAlgorithm, signAlgorithmHMAC)
-	vals.Set(httpHeaderAccessKey, accessKey)
-	vals.Set(httpHeaderContentHash, hash)
-	stringToSign := vals.Encode()
-
-	sig := sumHMAC([]byte(secretKey), []byte(stringToSign))
-	vals.Set(httpHeaderSignature, sig)
-	req.AddHeader(httpHeaderAuthorization, vals.Encode())
+	h := req.GetHeader()
+	headers := getSignedHeaders(h)
+	stringToSign := getStringToSign(h, headers)
+	signature := sumHMAC([]byte(secretKey), []byte(stringToSign))
+	auth := []string{
+		strings.Join(headers, ";"),
+		signature,
+	}
+	req.SetHeader(httpHeaderAuthorization, strings.Join(auth, ", "))
 }
 
 // ValidateDefault validate signature
@@ -48,25 +61,44 @@ func ValidateDefault(resp *httpx.Response, secretKey string, payload []byte) err
 	httpResp := resp.ToHTTP()
 	auth := httpResp.Header.Get("Authorization")
 	if auth == "" {
-		return errors.New("sdk: not found http header: Authorization")
+		return errors.New("sdk: no http header: Authorization")
 	}
-	vals, err := url.ParseQuery(auth)
-	if err != nil {
-		return err
+	params := strings.Split(auth, ", ")
+	if len(params) != 2 {
+		return errors.New("sdk: invalid Authorization header")
 	}
-	gotSig := vals.Get(httpHeaderSignature)
-	vals.Del(httpHeaderSignature)
+	headers := strings.Split(params[0], ";")
+	stringToSign := getStringToSign(httpResp.Header, headers)
 
-	// check content hash
-	hash := sum256(payload)
-	if val := vals.Get(httpHeaderContentHash); val != hash {
-		return errors.Errorf("sdk: check content hash failed: expected %s got %s",
-			hash, val)
-	}
-	stringToSign := vals.Encode()
+	gotSig := params[1]
 	expectSig := sumHMAC([]byte(secretKey), []byte(stringToSign))
 	if expectSig != gotSig {
 		return errors.Errorf("sdk: invalid signature: expected %s got %s", expectSig, gotSig)
 	}
 	return nil
+}
+
+func getSignedHeaders(h http.Header) []string {
+	var hs []string
+
+	for k := range h {
+		if k == "User-Agent" {
+			continue
+		}
+		if k == "Authorization" {
+			continue
+		}
+		hs = append(hs, strings.ToLower(k))
+	}
+	sort.Strings(hs)
+	return hs
+}
+
+func getStringToSign(h http.Header, headers []string) string {
+	stringToSign := signAlgorithmHMAC
+	for _, k := range headers {
+		v := h.Get(k)
+		stringToSign += "\n" + v
+	}
+	return stringToSign
 }
