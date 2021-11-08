@@ -113,9 +113,9 @@ func (authn *WebAuthn) StartSignIn(user User, req *http.Request) (*StartSignInRe
 	if err != nil {
 		return nil, err
 	}
-	var loc string
+	loc := "fido/"
 	if user != nil {
-		loc = "fido/" + hex.EncodeToString(user.ID())
+		loc += hex.EncodeToString(user.ID())
 	}
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", bytes.NewReader(data))
 	authn.sess.SignWithRequest(httpxReq, loc, data)
