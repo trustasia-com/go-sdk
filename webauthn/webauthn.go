@@ -78,8 +78,8 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignInResp, error
 		return nil, err
 	}
 
-	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preregister", bytes.NewReader(data))
-	authn.sess.SignWithRequest(httpxReq, "fido", data)
+	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/register", bytes.NewReader(data))
+	authn.sess.SignWithRequest(httpxReq, "fido/", data)
 	httpxResp, err := authn.client.Do(httpxReq)
 	if err != nil {
 		return nil, err
@@ -138,7 +138,7 @@ func (authn *WebAuthn) FinishSignIn(req *http.Request) (*FinishSignInResp, error
 		return nil, err
 	}
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/authenticate", bytes.NewReader(data))
-	authn.sess.SignWithRequest(httpxReq, "fido", data)
+	authn.sess.SignWithRequest(httpxReq, "fido/", data)
 	httpxResp, err := authn.client.Do(httpxReq)
 	if err != nil {
 		return nil, err

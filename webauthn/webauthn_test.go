@@ -17,8 +17,8 @@ var (
 
 func init() {
 	sess, err := credentials.New(credentials.Options{
-		AccessKey: "test",
-		SecretKey: "secret",
+		AccessKey: "c676aeb85dc2c552",
+		SecretKey: "a290bc6da6318e5aaf18da9a29bc6ec2",
 		Endpoint:  "http://localhost:9000",
 	}, false)
 	if err != nil {
@@ -59,11 +59,19 @@ func TestStartSignUp(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(resp)
+	t.Logf("%#v", resp)
 }
 
 func TestFinishSignUp(t *testing.T) {
+	data := `{"authenticatorSelection":{"userVerification":"preferred","requireResidentKey":true},"attestation":"direct","extensions":{}}`
+	req := httptest.NewRequest(http.MethodPost, "/ta-fido-server/register", strings.NewReader(data))
+	req.Header.Set("Content-Type", "application/json")
 
+	resp, err := webauthn.FinishSignUp(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("%#v", resp)
 }
 
 func TestStartSignIn(t *testing.T) {
