@@ -8,8 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/trustasia-com/go-sdk/webauthn/types"
-	"github.com/trustasia-com/go-sdk/wekey/session"
+	"github.com/trustasia-com/go-sdk/pkg/credentials"
 
 	"github.com/trustasia-com/go-van/pkg/server"
 	"github.com/trustasia-com/go-van/pkg/server/httpx"
@@ -18,19 +17,19 @@ import (
 // WebAuthn instance for RP
 type WebAuthn struct {
 	client httpx.HTTPClient
-	sess   *session.Session
+	sess   *credentials.Session
 }
 
-// NewWebAuthn new WebAuthn instance
-func NewWebAuthn(sess *session.Session) *WebAuthn {
+// New new WebAuthn instance
+func New(sess *credentials.Session) *WebAuthn {
 	cli := httpx.NewClient(
-		server.WithEndpoint(sess.Options.Host),
+		server.WithEndpoint(sess.Options.Endpoint),
 	)
 	return &WebAuthn{sess: sess, client: cli}
 }
 
 // StartSignUp start registration process
-func (authn *WebAuthn) StartSignUp(user types.User, req *http.Request) (*types.StartSignUpResp, error) {
+func (authn *WebAuthn) StartSignUp(user User, req *http.Request) (*StartSignUpResp, error) {
 	if req == nil {
 		return nil, errors.New("sdk: http.Request is nil, please specify")
 	}
@@ -41,7 +40,7 @@ func (authn *WebAuthn) StartSignUp(user types.User, req *http.Request) (*types.S
 	defer req.Body.Close()
 
 	// json unmarshal
-	input := types.StartSignUpReq{}
+	input := StartSignUpReq{}
 	err = json.Unmarshal(data, &input)
 	if err != nil {
 		return nil, err
@@ -53,20 +52,19 @@ func (authn *WebAuthn) StartSignUp(user types.User, req *http.Request) (*types.S
 	if err != nil {
 		return nil, err
 	}
-	sig := authn.sess.Sign(data)
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preregister", bytes.NewReader(data))
-	httpxReq.AddHeader("Authenrization", sig)
+	authn.sess.SignWithRequest(httpxReq, data)
 	httpxResp, err := authn.client.Do(httpxReq)
 	if err != nil {
 		return nil, err
 	}
-	resp := &types.StartSignUpResp{}
+	resp := &StartSignUpResp{}
 	err = httpxResp.Scan(resp)
 	return resp, err
 }
 
 // FinishSignUp registration process
-func (authn *WebAuthn) FinishSignUp(user types.User, req *http.Request) (*types.FinishSignInResp, error) {
+func (authn *WebAuthn) FinishSignUp(user User, req *http.Request) (*FinishSignInResp, error) {
 	if req == nil {
 		return nil, errors.New("sdk: http.Request is nil, please specify")
 	}
@@ -75,20 +73,19 @@ func (authn *WebAuthn) FinishSignUp(user types.User, req *http.Request) (*types.
 		return nil, err
 	}
 
-	sig := authn.sess.Sign(data)
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preregister", bytes.NewReader(data))
-	httpxReq.AddHeader("Authenrization", sig)
+	authn.sess.SignWithRequest(httpxReq, data)
 	httpxResp, err := authn.client.Do(httpxReq)
 	if err != nil {
 		return nil, err
 	}
-	resp := &types.FinishSignInResp{}
+	resp := &FinishSignInResp{}
 	err = httpxResp.Scan(resp)
 	return resp, nil
 }
 
 // StartSignIn start login
-func (authn *WebAuthn) StartSignIn(user types.User, req *http.Request) (*types.StartSignInResp, error) {
+func (authn *WebAuthn) StartSignIn(user User, req *http.Request) (*StartSignInResp, error) {
 	if req == nil {
 		return nil, errors.New("sdk: http.Request is nil, please specify")
 	}
@@ -99,7 +96,7 @@ func (authn *WebAuthn) StartSignIn(user types.User, req *http.Request) (*types.S
 	defer req.Body.Close()
 
 	// json unmarshal
-	input := types.StartSignInReq{}
+	input := StartSignInReq{}
 	err = json.Unmarshal(data, &input)
 	if err != nil {
 		return nil, err
@@ -111,20 +108,19 @@ func (authn *WebAuthn) StartSignIn(user types.User, req *http.Request) (*types.S
 	if err != nil {
 		return nil, err
 	}
-	sig := authn.sess.Sign(data)
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", bytes.NewReader(data))
-	httpxReq.AddHeader("Authenrization", sig)
+	authn.sess.SignWithRequest(httpxReq, data)
 	httpxResp, err := authn.client.Do(httpxReq)
 	if err != nil {
 		return nil, err
 	}
-	resp := &types.StartSignInResp{}
+	resp := &StartSignInResp{}
 	err = httpxResp.Scan(resp)
 	return resp, err
 }
 
 // FinishSignIn finish login
-func (authn *WebAuthn) FinishSignIn(user types.User, req *http.Request) (*types.FinishSignInResp, error) {
+func (authn *WebAuthn) FinishSignIn(user User, req *http.Request) (*FinishSignInResp, error) {
 	if req == nil {
 		return nil, errors.New("sdk: http.Request is nil, please specify")
 	}
@@ -133,14 +129,13 @@ func (authn *WebAuthn) FinishSignIn(user types.User, req *http.Request) (*types.
 		return nil, err
 	}
 
-	sig := authn.sess.Sign(data)
-	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", bytes.NewReader(data))
-	httpxReq.AddHeader("Authenrization", sig)
+	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/authenticate", bytes.NewReader(data))
+	authn.sess.SignWithRequest(httpxReq, data)
 	httpxResp, err := authn.client.Do(httpxReq)
 	if err != nil {
 		return nil, err
 	}
-	resp := &types.FinishSignInResp{}
+	resp := &FinishSignInResp{}
 	err = httpxResp.Scan(resp)
 	return resp, nil
 }
