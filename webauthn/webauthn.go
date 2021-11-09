@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/trustasia-com/go-sdk/pkg/credentials"
+	"github.com/trustasia-com/go-sdk/pkg/types"
 
 	"github.com/trustasia-com/go-van/pkg/server"
 	"github.com/trustasia-com/go-van/pkg/server/httpx"
@@ -63,7 +64,10 @@ func (authn *WebAuthn) StartSignUp(user User, req *http.Request) (*StartSignUpRe
 	if err != nil {
 		return nil, err
 	}
-	resp := &StartSignUpResp{}
+	resp := &StartSignUpResp{
+		ExcludeCredentials: []types.PublicKeyCredentialDescriptor{},
+		Extensions:         types.AuthenticationExtensionsClientInputs{},
+	}
 	err = httpxResp.Scan(resp)
 	return resp, err
 }
@@ -123,7 +127,10 @@ func (authn *WebAuthn) StartSignIn(user User, req *http.Request) (*StartSignInRe
 	if err != nil {
 		return nil, err
 	}
-	resp := &StartSignInResp{}
+	resp := &StartSignInResp{
+		ExcludeCredentials: []types.PublicKeyCredentialDescriptor{},
+		Extensions:         types.AuthenticationExtensionsClientInputs{},
+	}
 	err = httpxResp.Scan(resp)
 	return resp, err
 }

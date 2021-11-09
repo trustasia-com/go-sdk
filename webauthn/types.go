@@ -29,7 +29,7 @@ type StartSignUpResp struct {
 	RP                     types.PublicKeyCredentialRpEntity          `json:"rp"`
 	User                   types.PublicKeyCredentialUserEntity        `json:"user"`
 	Challenge              string                                     `json:"challenge"`
-	PubKeyCredParams       []types.PublicKeyCredentialType            `json:"pubKeyCredParams"`
+	PubKeyCredParams       []types.PublicKeyCredentialParameters      `json:"pubKeyCredParams"`
 	Timeout                int                                        `json:"timeout"`
 	ExcludeCredentials     []types.PublicKeyCredentialDescriptor      `json:"excludeCredentials"`
 	AuthenticatorSelection types.AuthenticatorSelectionCriteria       `json:"authenticatorSelection"`
