@@ -73,7 +73,7 @@ func (authn *WebAuthn) StartSignUp(user User, req *http.Request) (*StartSignUpRe
 }
 
 // FinishSignUp registration process
-func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignInResp, error) {
+func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error) {
 	if req == nil {
 		return nil, errors.New("sdk: http.Request is nil, please specify")
 	}
@@ -88,7 +88,7 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignInResp, error
 	if err != nil {
 		return nil, err
 	}
-	resp := &FinishSignInResp{}
+	resp := &FinishSignUpResp{}
 	err = httpxResp.Scan(resp)
 	return resp, nil
 }
