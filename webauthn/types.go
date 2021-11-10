@@ -25,6 +25,7 @@ type StartSignUpReq struct {
 }
 
 // StartSignUpResp sign up response
+// https://www.w3.org/TR/webauthn/#dictionary-makecredentialoptions
 type StartSignUpResp struct {
 	RP                     types.PublicKeyCredentialRpEntity          `json:"rp"`
 	User                   types.PublicKeyCredentialUserEntity        `json:"user"`
@@ -52,10 +53,21 @@ type FinishSignUpReq struct {
 type FinishSignUpResp struct{}
 
 // StartSignInReq sign in request
-type StartSignInReq = StartSignUpReq
+type StartSignInReq struct {
+	Username    string `json:"username"`
+	DisplayName string `json:"displayName"`
+}
 
 // StartSignInResp sign in response
-type StartSignInResp = StartSignUpResp
+// https://www.w3.org/TR/webauthn/#dictionary-assertion-options
+type StartSignInResp struct {
+	Challenge        string                                     `json:"challenge"`
+	Timeout          int                                        `json:"timeout"`
+	RpID             string                                     `json:"rpId"`
+	AllowCredentials []types.PublicKeyCredentialDescriptor      `json:"excludeCredentials"`
+	UserVerification types.UserVerificationRequirement          `json:"userVerification"`
+	Extensions       types.AuthenticationExtensionsClientInputs `json:"extensions"`
+}
 
 // FinishSignInReq sign in request
 type FinishSignInReq struct {

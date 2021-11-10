@@ -128,8 +128,8 @@ func (authn *WebAuthn) StartSignIn(req *http.Request, user User) (*StartSignInRe
 		return nil, err
 	}
 	resp := &StartSignInResp{
-		ExcludeCredentials: []types.PublicKeyCredentialDescriptor{},
-		Extensions:         types.AuthenticationExtensionsClientInputs{},
+		AllowCredentials: []types.PublicKeyCredentialDescriptor{},
+		Extensions:       types.AuthenticationExtensionsClientInputs{},
 	}
 	err = httpxResp.Scan(resp)
 	return resp, err
