@@ -2,7 +2,6 @@
 package types
 
 import (
-	"github.com/trustasia-com/go-sdk/pkg/base64url"
 	"github.com/trustasia-com/go-sdk/pkg/cose"
 )
 
@@ -53,7 +52,7 @@ type PublicKeyCredentialUserEntity struct {
 	// authentication and authorization decisions MUST be made on the basis of this id
 	// member, not the displayName nor name members. See Section 6.1 of
 	// [RFC8266](https://www.w3.org/TR/webauthn/#biblio-rfc8266).
-	ID base64url.Encoding `json:"id"` // max 64 byte
+	ID string `json:"id"` // max 64 byte & base64url encoded
 
 	// Deprecated: new WebAuthn, user icon
 	Icon string `json:"icon,omitempty"`
@@ -87,7 +86,7 @@ type PublicKeyCredentialDescriptor struct {
 	// the type of the public key credential the caller is referring to.
 	Type PublicKeyCredentialType `json:"type"`
 	// the credential ID of the public key credential the caller is referring to.
-	ID base64url.Encoding `json:"id"`
+	ID string `json:"id"` // base64url encoded
 	// This OPTIONAL member contains a hint as to how the client might communicate with the managing
 	// authenticator of the public key credential the caller is referring to
 	Transports []AuthenticatorTransport `json:"transports,omitempty"`
