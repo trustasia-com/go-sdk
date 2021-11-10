@@ -27,11 +27,12 @@ type StartSignUpReq struct {
 // StartSignUpResp sign up response
 // https://www.w3.org/TR/webauthn/#dictionary-makecredentialoptions
 type StartSignUpResp struct {
-	RP                     types.PublicKeyCredentialRpEntity          `json:"rp"`
-	User                   types.PublicKeyCredentialUserEntity        `json:"user"`
-	Challenge              string                                     `json:"challenge"`
-	PubKeyCredParams       []types.PublicKeyCredentialParameters      `json:"pubKeyCredParams"`
-	Timeout                int                                        `json:"timeout"`
+	RP               types.PublicKeyCredentialRpEntity     `json:"rp"`
+	User             types.PublicKeyCredentialUserEntity   `json:"user"`
+	Challenge        string                                `json:"challenge"`
+	PubKeyCredParams []types.PublicKeyCredentialParameters `json:"pubKeyCredParams"`
+	Timeout          int                                   `json:"timeout"`
+
 	ExcludeCredentials     []types.PublicKeyCredentialDescriptor      `json:"excludeCredentials"`
 	AuthenticatorSelection types.AuthenticatorSelectionCriteria       `json:"authenticatorSelection"`
 	Attestation            types.AttestationConveyancePreference      `json:"attestation"`
@@ -61,11 +62,12 @@ type StartSignInReq struct {
 // StartSignInResp sign in response
 // https://www.w3.org/TR/webauthn/#dictionary-assertion-options
 type StartSignInResp struct {
-	Challenge        string                                     `json:"challenge"`
-	Timeout          int                                        `json:"timeout"`
-	RpID             string                                     `json:"rpId"`
+	Challenge string `json:"challenge"`
+	Timeout   int    `json:"timeout"`
+	RpID      string `json:"rpId"`
+
 	AllowCredentials []types.PublicKeyCredentialDescriptor      `json:"allowCredentials"`
-	UserVerification types.UserVerificationRequirement          `json:"userVerification"`
+	UserVerification types.UserVerificationRequirement          `json:"userVerification,omitempty"`
 	Extensions       types.AuthenticationExtensionsClientInputs `json:"extensions"`
 }
 
