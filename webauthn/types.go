@@ -78,7 +78,7 @@ type FinishSignInReq struct {
 	Type     types.PublicKeyCredentialType `json:"type"`
 	Response struct {
 		ClientDataJSON    string `json:"clientDataJSON"`
-		AttestationObject string `json:"attestationObject"`
+		AuthenticatorData string `json:"authenticatorData"`
 		Signature         string `json:"signature"`
 		UserHandle        string `json:"userHandle"`
 	} `json:"response"`
