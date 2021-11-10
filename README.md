@@ -1,2 +1,2 @@
 # go-sdk
-TrustAsia FIDO Server SDK.
+TrustAsia Golang SDK.
