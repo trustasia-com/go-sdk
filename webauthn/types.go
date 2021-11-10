@@ -64,7 +64,7 @@ type StartSignInResp struct {
 	Challenge        string                                     `json:"challenge"`
 	Timeout          int                                        `json:"timeout"`
 	RpID             string                                     `json:"rpId"`
-	AllowCredentials []types.PublicKeyCredentialDescriptor      `json:"excludeCredentials"`
+	AllowCredentials []types.PublicKeyCredentialDescriptor      `json:"allowCredentials"`
 	UserVerification types.UserVerificationRequirement          `json:"userVerification"`
 	Extensions       types.AuthenticationExtensionsClientInputs `json:"extensions"`
 }
