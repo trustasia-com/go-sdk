@@ -58,7 +58,19 @@ type StartSignInReq = StartSignUpReq
 type StartSignInResp = StartSignUpResp
 
 // FinishSignInReq sign in request
-type FinishSignInReq = FinishSignUpReq
+type FinishSignInReq struct {
+	ID       string                        `json:"id"`
+	RawID    string                        `json:"rawId"`
+	Type     types.PublicKeyCredentialType `json:"type"`
+	Response struct {
+		ClientDataJSON    string `json:"clientDataJSON"`
+		AttestationObject string `json:"attestationObject"`
+		Signature         string `json:"signature"`
+		UserHandle        string `json:"userHandle"`
+	} `json:"response"`
+}
 
 // FinishSignInResp sign in response
-type FinishSignInResp struct{}
+type FinishSignInResp struct {
+	UserID []byte `json:"userId"`
+}
