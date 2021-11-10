@@ -55,7 +55,7 @@ func TestStartSignUp(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/ta-fido-server/preregister", strings.NewReader(data))
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := webauthn.StartSignUp(u, req)
+	resp, err := webauthn.StartSignUp(req, u)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func TestFinishSignUp(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/ta-fido-server/register", strings.NewReader(data))
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := webauthn.FinishSignUp(req)
+	resp, err := webauthn.FinishSignUp(req, u)
 	if err != nil {
 		t.Fatal(err)
 	}

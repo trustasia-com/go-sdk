@@ -31,7 +31,7 @@ func New(sess *credentials.Session) *WebAuthn {
 }
 
 // StartSignUp start registration process
-func (authn *WebAuthn) StartSignUp(user User, req *http.Request) (*StartSignUpResp, error) {
+func (authn *WebAuthn) StartSignUp(req *http.Request, user User) (*StartSignUpResp, error) {
 	if req == nil {
 		return nil, errors.New("sdk: http.Request is nil, please specify")
 	}
@@ -73,9 +73,12 @@ func (authn *WebAuthn) StartSignUp(user User, req *http.Request) (*StartSignUpRe
 }
 
 // FinishSignUp registration process
-func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error) {
+func (authn *WebAuthn) FinishSignUp(req *http.Request, user User) (*FinishSignUpResp, error) {
 	if req == nil {
 		return nil, errors.New("sdk: http.Request is nil, please specify")
+	}
+	if user == nil {
+		return nil, errors.New("sdk: user is nil, please specify")
 	}
 	data, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -83,7 +86,7 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error
 	}
 
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/register", bytes.NewReader(data))
-	authn.sess.SignWithRequest(httpxReq, "fido/", data)
+	authn.sess.SignWithRequest(httpxReq, "fido/"+hex.EncodeToString(user.ID()), data)
 	httpxResp, err := authn.client.Do(httpxReq)
 	if err != nil {
 		return nil, err
@@ -94,7 +97,7 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error
 }
 
 // StartSignIn start login
-func (authn *WebAuthn) StartSignIn(user User, req *http.Request) (*StartSignInResp, error) {
+func (authn *WebAuthn) StartSignIn(req *http.Request, user User) (*StartSignInResp, error) {
 	if req == nil {
 		return nil, errors.New("sdk: http.Request is nil, please specify")
 	}
@@ -110,15 +113,15 @@ func (authn *WebAuthn) StartSignIn(user User, req *http.Request) (*StartSignInRe
 	if err != nil {
 		return nil, err
 	}
-	input.Username = user.Name()
-	input.DisplayName = user.DisplayName()
-
 	data, err = json.Marshal(input)
 	if err != nil {
 		return nil, err
 	}
 	loc := "fido/"
 	if user != nil {
+		input.Username = user.Name()
+		input.DisplayName = user.DisplayName()
+
 		loc += hex.EncodeToString(user.ID())
 	}
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", bytes.NewReader(data))
