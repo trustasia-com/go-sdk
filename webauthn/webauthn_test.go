@@ -67,7 +67,7 @@ func TestFinishSignUp(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/ta-fido-server/register", strings.NewReader(data))
 	req.Header.Set("Content-Type", "application/json")
 
-	resp, err := webauthn.FinishSignUp(req, u)
+	resp, err := webauthn.FinishSignUp(req)
 	if err != nil {
 		t.Fatal(err)
 	}

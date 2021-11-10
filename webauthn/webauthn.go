@@ -73,12 +73,9 @@ func (authn *WebAuthn) StartSignUp(req *http.Request, user User) (*StartSignUpRe
 }
 
 // FinishSignUp registration process
-func (authn *WebAuthn) FinishSignUp(req *http.Request, user User) (*FinishSignUpResp, error) {
+func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error) {
 	if req == nil {
 		return nil, errors.New("sdk: http.Request is nil, please specify")
-	}
-	if user == nil {
-		return nil, errors.New("sdk: user is nil, please specify")
 	}
 	data, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -86,7 +83,7 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request, user User) (*FinishSignUp
 	}
 
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/register", bytes.NewReader(data))
-	authn.sess.SignWithRequest(httpxReq, "fido/"+hex.EncodeToString(user.ID()), data)
+	authn.sess.SignWithRequest(httpxReq, "fido/", data)
 	httpxResp, err := authn.client.Do(httpxReq)
 	if err != nil {
 		return nil, err
