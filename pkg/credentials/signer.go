@@ -58,7 +58,7 @@ func SignerDefault(req *httpx.Request, accessKey, secretKey, location string, pa
 
 // ValidateDefault validate signature
 func ValidateDefault(resp *httpx.Response, secretKey string, payload []byte) error {
-	httpResp := resp.ToHTTP()
+	httpResp := resp.HTTP()
 	auth := httpResp.Header.Get("Authorization")
 	if auth == "" {
 		return errors.New("sdk: no http header: Authorization")

@@ -3,6 +3,7 @@ package webauthn
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -18,7 +19,7 @@ import (
 
 // WebAuthn instance for RP
 type WebAuthn struct {
-	client httpx.HTTPClient
+	client httpx.Client
 	sess   *credentials.Session
 }
 
@@ -60,7 +61,7 @@ func (authn *WebAuthn) StartSignUp(req *http.Request, user User) (*StartSignUpRe
 	}
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preregister", bytes.NewReader(data))
 	authn.sess.SignWithRequest(httpxReq, loc, data)
-	httpxResp, err := authn.client.Do(httpxReq)
+	httpxResp, err := authn.client.Do(context.Background(), httpxReq)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +85,7 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error
 
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/register", bytes.NewReader(data))
 	authn.sess.SignWithRequest(httpxReq, "fido/", data)
-	httpxResp, err := authn.client.Do(httpxReq)
+	httpxResp, err := authn.client.Do(context.Background(), httpxReq)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +124,7 @@ func (authn *WebAuthn) StartSignIn(req *http.Request, user User) (*StartSignInRe
 	}
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", bytes.NewReader(data))
 	authn.sess.SignWithRequest(httpxReq, loc, data)
-	httpxResp, err := authn.client.Do(httpxReq)
+	httpxResp, err := authn.client.Do(context.Background(), httpxReq)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +147,7 @@ func (authn *WebAuthn) FinishSignIn(req *http.Request) (*FinishSignInResp, error
 	}
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/authenticate", bytes.NewReader(data))
 	authn.sess.SignWithRequest(httpxReq, "fido/", data)
-	httpxResp, err := authn.client.Do(httpxReq)
+	httpxResp, err := authn.client.Do(context.Background(), httpxReq)
 	if err != nil {
 		return nil, err
 	}
