@@ -277,8 +277,8 @@ github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5Cc
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/tevid/gohamcrest v1.1.1/go.mod h1:3UvtWlqm8j5JbwYZh80D/PVBt0mJ1eJiYgZMibh0H/k=
-github.com/trustasia-com/go-van v0.1.5-0.20211111025719-5536b664f3fd h1:uDHLyzd28mfTjHt1KgysJPXmJeAlbbCsgyhxJtszzw8=
-github.com/trustasia-com/go-van v0.1.5-0.20211111025719-5536b664f3fd/go.mod h1:YNRscj4JJudNQrJNZ1Bo8k6XKdMF42opfRKoGZPYqU8=
+github.com/trustasia-com/go-van v0.1.5-0.20211112074719-74c64355c700 h1:48r0FO2zkD9bEXLWyG0vb+NANl2CXJJmDTIrC5NabWs=
+github.com/trustasia-com/go-van v0.1.5-0.20211112074719-74c64355c700/go.mod h1:YNRscj4JJudNQrJNZ1Bo8k6XKdMF42opfRKoGZPYqU8=
 github.com/yuin/goldmark v1.1.25/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.1.32/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
