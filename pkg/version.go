@@ -1,5 +1,5 @@
-// Package wekey provides ...
-package wekey
+// Package pkg provides ...
+package pkg
 
 const (
 	// SDKName is the name of this WeKey SDK

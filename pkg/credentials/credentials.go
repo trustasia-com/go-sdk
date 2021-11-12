@@ -7,6 +7,8 @@ import (
 	"encoding/hex"
 	"errors"
 
+	"github.com/trustasia-com/go-sdk/pkg"
+	"github.com/trustasia-com/go-van/pkg/logx"
 	"github.com/trustasia-com/go-van/pkg/server/httpx"
 )
 
@@ -55,6 +57,7 @@ type Session struct {
 
 // New session
 func New(options Options, isProd bool) (*Session, error) {
+	logx.Infof("sdk: name: %s, version: %s", pkg.SDKName, pkg.SDKVersion)
 	// check options
 	if options.AccessKey == "" || options.SecretKey == "" {
 		return nil, errors.New("sdk: accessKey or secretKey not specified")
