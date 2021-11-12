@@ -27,12 +27,6 @@ const (
 	httpHeaderAuthorization = "Authorization"
 )
 
-// Signer sign the request before Do()
-type Signer func(req *httpx.Request, accessKey, secretKey, location string, payload []byte)
-
-// Validator validate the request data
-type Validator func(resp *httpx.Response, secretKey string, payload []byte) error
-
 // SignerDefault signatureDefault signer
 //   payload: query or body
 //   header
@@ -46,38 +40,50 @@ func SignerDefault(req *httpx.Request, accessKey, secretKey, location string, pa
 	req.SetHeader(httpHeaderContentHash, hash)
 
 	h := req.GetHeader()
-	headers := getSignedHeaders(h)
-	stringToSign := getStringToSign(h, headers)
+	signedHeaders := getSignedHeaders(h)
+	stringToSign := getStringToSign(h, signedHeaders)
 	signature := sumHMAC([]byte(secretKey), []byte(stringToSign))
 	auth := []string{
-		strings.Join(headers, ";"),
+		strings.Join(signedHeaders, ";"),
 		signature,
 	}
-	req.SetHeader(httpHeaderAuthorization, strings.Join(auth, ", "))
+	req.SetHeader(httpHeaderAuthorization, signAlgorithmHMAC+" "+strings.Join(auth, ","))
 }
 
 // ValidateDefault validate signature
 func ValidateDefault(resp *httpx.Response, secretKey string, payload []byte) error {
 	httpResp := resp.HTTP()
 	auth := httpResp.Header.Get(httpHeaderAuthorization)
+	// check auth header
 	if auth == "" {
-		return errors.New("sdk: no http header: Authorization")
+		return ErrNotFoundAuthorizationHeader
 	}
+	// check content hash
 	hash := httpResp.Header.Get(httpHeaderContentHash)
 	if sum256(payload) != hash {
-		return errors.New("sdk: payload SHA256 hash not matched")
+		return ErrNotMatchedPayloadHash
 	}
-	params := strings.Split(auth, ", ")
+	// check algorithm
+	params := strings.Split(auth, " ")
 	if len(params) != 2 {
-		return errors.New("sdk: invalid Authorization header")
+		return ErrInvalidAuthorizationHeader
 	}
-	headers := strings.Split(params[0], ";")
-	stringToSign := getStringToSign(httpResp.Header, headers)
+	algo := params[0]
+	if algo != signAlgorithmHMAC {
+		return ErrNotMatchedAlgorithmServer
+	}
+	// check headers
+	params = strings.Split(params[1], ",")
+	if len(params) != 2 {
+		return ErrInvalidAuthorizationHeader
+	}
+	signedHeaders := strings.Split(params[0], ";")
+	stringToSign := getStringToSign(httpResp.Header, signedHeaders)
 
 	gotSig := params[1]
 	expectSig := sumHMAC([]byte(secretKey), []byte(stringToSign))
 	if expectSig != gotSig {
-		return errors.Errorf("sdk: invalid signature: expected %s got %s", expectSig, gotSig)
+		return errors.Wrapf(ErrInvalidSignature, "expected %s got %s", expectSig, gotSig)
 	}
 	return nil
 }

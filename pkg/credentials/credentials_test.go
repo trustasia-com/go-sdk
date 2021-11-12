@@ -33,12 +33,12 @@ func TestSession_SignWithRequest(t *testing.T) {
 	// get
 	payload := "page=1&page_size=10"
 	req := httpx.NewRequest(http.MethodGet, "/?"+payload, nil)
-	sess.SignWithRequest(req, "id", []byte(payload))
+	sess.SignRequest(req, "id", []byte(payload))
 	t.Log(req)
 
 	// post
 	payload = `{"page":1,"page_size":10}`
 	req = httpx.NewRequest(http.MethodPost, "/", strings.NewReader(payload))
-	sess.SignWithRequest(req, "id", []byte(payload))
+	sess.SignRequest(req, "id", []byte(payload))
 	t.Log(req)
 }

@@ -28,6 +28,21 @@ const (
 	// and more
 )
 
+// error list
+var (
+	ErrNotFoundAuthorizationHeader = errors.New("sdk: no http header: Authorization")
+	ErrNotMatchedPayloadHash       = errors.New("sdk: payload SHA256 hash not matched")
+	ErrInvalidSignature            = errors.New("sdk: invalid signature")
+	ErrInvalidAuthorizationHeader  = errors.New("sdk: invalid Authorization header")
+	ErrNotMatchedAlgorithmServer   = errors.New("sdk: algorithm not matched from server")
+)
+
+// Signer sign the request before Do()
+type Signer func(req *httpx.Request, accessKey, secretKey, location string, payload []byte)
+
+// Validator validate the request data
+type Validator func(resp *httpx.Response, secretKey string, payload []byte) error
+
 // Options session options
 type Options struct {
 	// credential
@@ -66,8 +81,8 @@ func (sess *Session) Sign(data []byte) string {
 	return sumHMAC([]byte(sess.Options.SecretKey), data)
 }
 
-// SignWithRequest sign & set request header
-func (sess *Session) SignWithRequest(req *httpx.Request, location string, payload []byte) {
+// SignRequest sign & set request header
+func (sess *Session) SignRequest(req *httpx.Request, location string, payload []byte) {
 	var signer Signer
 	switch sess.Options.SignerType {
 
@@ -78,14 +93,14 @@ func (sess *Session) SignWithRequest(req *httpx.Request, location string, payloa
 }
 
 // ValidateSig validate the authorization
-func (sess *Session) ValidateSig(resp *httpx.Response) error {
+func (sess *Session) ValidateSig(resp *httpx.Response, payload []byte) error {
 	var validator Validator
 	switch sess.Options.SignerType {
 
 	default:
 		validator = ValidateDefault
 	}
-	return validator(resp, sess.Options.SecretKey, resp.Data)
+	return validator(resp, sess.Options.SecretKey, payload)
 }
 
 // sumHMAC calculate hmac between two input byte array.
