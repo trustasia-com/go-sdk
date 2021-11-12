@@ -11,6 +11,12 @@ import (
 	"github.com/trustasia-com/go-van/pkg/server/httpx"
 )
 
+// Signer sign the request before Do()
+type Signer func(req *httpx.Request, accessKey, secretKey, location string, payload []byte)
+
+// Validator validate the request data
+type Validator func(resp *httpx.Response, secretKey string, payload []byte) error
+
 // Signature and API related constants.
 const (
 	signAlgorithmHMAC = "WEKEY-HMAC-SHA256"
