@@ -55,8 +55,9 @@ type FinishSignUpResp struct{}
 
 // StartSignInReq sign in request
 type StartSignInReq struct {
-	Username    string `json:"username"`
-	DisplayName string `json:"displayName"`
+	Username         string `json:"username"`
+	DisplayName      string `json:"displayName"`
+	UserVerification string `json:"userVerification"`
 }
 
 // StartSignInResp sign in response
