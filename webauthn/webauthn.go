@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -61,7 +62,7 @@ func (authn *WebAuthn) StartSignUp(req *http.Request, user User) (*StartSignUpRe
 	}
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preregister", bytes.NewReader(data))
 	authn.sess.SignRequest(httpxReq, loc, data)
-	httpxResp, err := authn.client.Do(context.Background(), httpxReq)
+	httpxResp, err := authn.httpRequest(httpxReq)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +86,7 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error
 
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/register", bytes.NewReader(data))
 	authn.sess.SignRequest(httpxReq, "fido/", data)
-	httpxResp, err := authn.client.Do(context.Background(), httpxReq)
+	httpxResp, err := authn.httpRequest(httpxReq)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +125,7 @@ func (authn *WebAuthn) StartSignIn(req *http.Request, user User) (*StartSignInRe
 	}
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", bytes.NewReader(data))
 	authn.sess.SignRequest(httpxReq, loc, data)
-	httpxResp, err := authn.client.Do(context.Background(), httpxReq)
+	httpxResp, err := authn.httpRequest(httpxReq)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +148,7 @@ func (authn *WebAuthn) FinishSignIn(req *http.Request) (*FinishSignInResp, error
 	}
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/authenticate", bytes.NewReader(data))
 	authn.sess.SignRequest(httpxReq, "fido/", data)
-	httpxResp, err := authn.client.Do(context.Background(), httpxReq)
+	httpxResp, err := authn.httpRequest(httpxReq)
 	if err != nil {
 		return nil, err
 	}
@@ -164,4 +165,22 @@ func (authn *WebAuthn) DeleteCredential() {
 // SelectCredentials query credential list
 func (authn *WebAuthn) SelectCredentials() {
 
+}
+
+func (authn *WebAuthn) httpRequest(req *httpx.Request) (httpx.Response, error) {
+	httpxResp, err := authn.client.Do(context.Background(), req)
+	if err != nil {
+		if len(httpxResp.Data) == 0 {
+			var badResp struct {
+				Code  int    `json:"code"`
+				Error string `json:"error"`
+			}
+			err2 := httpxResp.Scan(&badResp)
+			if err2 == nil {
+				err = fmt.Errorf("code: %d, err: %s", badResp.Code, badResp.Error)
+			}
+		}
+		return httpxResp, err
+	}
+	return httpxResp, nil
 }
