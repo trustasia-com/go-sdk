@@ -53,6 +53,13 @@ const (
 	VerificationDiscouraged UserVerificationRequirement = "discouraged"
 )
 
+// IsValidUserVerificationRequirement is valid user verification
+func IsValidUserVerificationRequirement(uv UserVerificationRequirement) bool {
+	return uv == VerificationRequired ||
+		uv == VerificationPreferred ||
+		uv == VerificationDiscouraged
+}
+
 // AuthenticatorSelectionCriteria WebAuthn Relying Parties may use the AuthenticatorSelectionCriteria
 // dictionary to specify their requirements regarding authenticator attributes.
 // https://www.w3.org/TR/webauthn/#dictionary-authenticatorSelection

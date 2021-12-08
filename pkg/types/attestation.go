@@ -21,3 +21,11 @@ const (
 	// statement that may include uniquely identifying information.
 	PreferenceEnterprise AttestationConveyancePreference = "enterprise"
 )
+
+// IsValidAttestationCP is valid attestation conveyance preference
+func IsValidAttestationCP(cp AttestationConveyancePreference) bool {
+	return cp == PreferenceNone ||
+		cp == PreferenceIndirect ||
+		cp == PreferenceDirect ||
+		cp == PreferenceEnterprise
+}

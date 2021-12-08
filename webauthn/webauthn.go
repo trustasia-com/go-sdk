@@ -4,7 +4,6 @@ package webauthn
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -33,33 +32,26 @@ func New(sess *credentials.Session) *WebAuthn {
 }
 
 // StartSignUp start registration process
-func (authn *WebAuthn) StartSignUp(req *http.Request, user User) (*StartSignUpResp, error) {
-	if req == nil {
-		return nil, errors.New("sdk: http.Request is nil, please specify")
+func (authn *WebAuthn) StartSignUp(req StartSignUpReq, userID string) (*StartSignUpResp, error) {
+	// check input
+	if req.Username == "" {
+		return nil, errors.New("Need specify req.Username")
 	}
-	if user == nil {
-		return nil, errors.New("sdk: user is nil, please specify")
+	if req.DisplayName == "" {
+		return nil, errors.New("Need specify req.DisplayName")
 	}
-	loc := "fido/" + hex.EncodeToString(user.ID())
-	data, err := io.ReadAll(req.Body)
-	if err != nil {
-		return nil, err
+	if req.Attestation == "" {
+		req.Attestation = types.PreferenceNone
 	}
-	defer req.Body.Close()
+	if !types.IsValidAttestationCP(req.Attestation) {
+		return nil, errors.New("Invalid req.Attestation value")
+	}
 
-	// json unmarshal
-	input := StartSignUpReq{}
-	err = json.Unmarshal(data, &input)
+	data, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
-	input.Username = user.Name()
-	input.DisplayName = user.DisplayName()
-
-	data, err = json.Marshal(input)
-	if err != nil {
-		return nil, err
-	}
+	loc := "fido/" + userID
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preregister", bytes.NewReader(data))
 	authn.sess.SignRequest(httpxReq, loc, data)
 	httpxResp, err := authn.httpRequest(httpxReq)
@@ -96,33 +88,26 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error
 }
 
 // StartSignIn start login
-func (authn *WebAuthn) StartSignIn(req *http.Request, user User) (*StartSignInResp, error) {
-	if req == nil {
-		return nil, errors.New("sdk: http.Request is nil, please specify")
+func (authn *WebAuthn) StartSignIn(req StartSignInReq, userID string) (*StartSignInResp, error) {
+	if userID != "" {
+		if req.Username == "" {
+			return nil, errors.New("Need specify req.Username")
+		}
+		if req.DisplayName == "" {
+			return nil, errors.New("Need specify req.DisplayName")
+		}
 	}
-	data, err := io.ReadAll(req.Body)
+	if req.UserVerification == "" {
+		req.UserVerification = types.VerificationPreferred
+	}
+	if !types.IsValidUserVerificationRequirement(req.UserVerification) {
+		return nil, errors.New("Invalid req.UserVerification value")
+	}
+	data, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
 	}
-	defer req.Body.Close()
-
-	// json unmarshal
-	input := StartSignInReq{}
-	err = json.Unmarshal(data, &input)
-	if err != nil {
-		return nil, err
-	}
-	data, err = json.Marshal(input)
-	if err != nil {
-		return nil, err
-	}
-	loc := "fido/"
-	if user != nil {
-		input.Username = user.Name()
-		input.DisplayName = user.DisplayName()
-
-		loc += hex.EncodeToString(user.ID())
-	}
+	loc := "fido/" + userID
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", bytes.NewReader(data))
 	authn.sess.SignRequest(httpxReq, loc, data)
 	httpxResp, err := authn.httpRequest(httpxReq)

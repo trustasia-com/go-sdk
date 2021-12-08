@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/trustasia-com/go-sdk/pkg/credentials"
+	"github.com/trustasia-com/go-sdk/pkg/types"
 )
 
 var (
@@ -51,11 +52,17 @@ func (u *user) Icon() string {
 }
 
 func TestStartSignUp(t *testing.T) {
-	data := `{"authenticatorSelection":{"userVerification":"preferred","requireResidentKey":true},"attestation":"direct","extensions":{}}`
-	req := httptest.NewRequest(http.MethodPost, "/ta-fido-server/preregister", strings.NewReader(data))
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := webauthn.StartSignUp(req, u)
+	rk := true
+	req := StartSignUpReq{
+		Username:    u.Name(),
+		DisplayName: u.DisplayName(),
+		Attestation: types.PreferenceDirect,
+		AuthenticatorSelection: types.AuthenticatorSelectionCriteria{
+			UserVerification:   types.VerificationPreferred,
+			RequireResidentKey: &rk,
+		},
+	}
+	resp, err := webauthn.StartSignUp(req, string(u.ID()))
 	if err != nil {
 		t.Fatal(err)
 	}
