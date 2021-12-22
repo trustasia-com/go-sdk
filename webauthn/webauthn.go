@@ -94,7 +94,7 @@ func (authn *WebAuthn) StartSignIn(req StartSignInReq, userID string) (*StartSig
 			return nil, errors.New("Need specify req.Username")
 		}
 		if req.DisplayName == "" {
-			return nil, errors.New("Need specify req.DisplayName")
+			req.DisplayName = req.Username
 		}
 	}
 	if req.UserVerification == "" {
