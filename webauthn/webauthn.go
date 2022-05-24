@@ -51,7 +51,7 @@ func (authn *WebAuthn) StartSignUp(req StartSignUpReq, userID string) (*StartSig
 	if err != nil {
 		return nil, err
 	}
-	loc := "fido/" + userID
+	loc := "fido-server/" + userID
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preregister", bytes.NewReader(data))
 	authn.sess.SignRequest(httpxReq, loc, data)
 	httpxResp, err := authn.httpRequest(httpxReq)
@@ -77,7 +77,7 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error
 	}
 
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/register", bytes.NewReader(data))
-	authn.sess.SignRequest(httpxReq, "fido/", data)
+	authn.sess.SignRequest(httpxReq, "fido-server/", data)
 	httpxResp, err := authn.httpRequest(httpxReq)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (authn *WebAuthn) StartSignIn(req StartSignInReq, userID string) (*StartSig
 	if err != nil {
 		return nil, err
 	}
-	loc := "fido/" + userID
+	loc := "fido-server/" + userID
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", bytes.NewReader(data))
 	authn.sess.SignRequest(httpxReq, loc, data)
 	httpxResp, err := authn.httpRequest(httpxReq)
@@ -132,7 +132,7 @@ func (authn *WebAuthn) FinishSignIn(req *http.Request) (*FinishSignInResp, error
 		return nil, err
 	}
 	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/authenticate", bytes.NewReader(data))
-	authn.sess.SignRequest(httpxReq, "fido/", data)
+	authn.sess.SignRequest(httpxReq, "fido-server/", data)
 	httpxResp, err := authn.httpRequest(httpxReq)
 	if err != nil {
 		return nil, err
@@ -143,12 +143,17 @@ func (authn *WebAuthn) FinishSignIn(req *http.Request) (*FinishSignInResp, error
 }
 
 // DeleteCredential delete exists credential
-func (authn *WebAuthn) DeleteCredential() {
+func (authn *WebAuthn) DeleteCredential(userID string) {
 
 }
 
 // SelectCredentials query credential list
 func (authn *WebAuthn) SelectCredentials() {
+
+}
+
+// DestroyUser delete user's all credentials
+func (authn *WebAuthn) DestroyUser() {
 
 }
 
