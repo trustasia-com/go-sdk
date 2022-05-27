@@ -79,14 +79,14 @@ func (sess *Session) Sign(data []byte) string {
 }
 
 // SignRequest sign & set request header
-func (sess *Session) SignRequest(req *httpx.Request, location string, payload []byte) {
+func (sess *Session) SignRequest(req *httpx.Request, scope string, payload []byte) {
 	var signer Signer
 	switch sess.Options.SignerType {
 
 	default:
 		signer = SignerDefault
 	}
-	signer(req, sess.Options.AccessKey, sess.Options.SecretKey, location, payload)
+	signer(req, sess.Options.AccessKey, sess.Options.SecretKey, scope, payload)
 }
 
 // ValidateSig validate the authorization

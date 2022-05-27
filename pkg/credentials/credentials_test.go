@@ -3,7 +3,6 @@ package credentials
 
 import (
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/trustasia-com/go-van/pkg/server/httpx"
@@ -31,14 +30,14 @@ func TestSession_Sign(t *testing.T) {
 
 func TestSession_SignWithRequest(t *testing.T) {
 	// get
-	payload := "page=1&page_size=10"
-	req := httpx.NewRequest(http.MethodGet, "/?"+payload, nil)
-	sess.SignRequest(req, "id", []byte(payload))
+	query := "page=1&page_size=10"
+	req := httpx.NewRequest(http.MethodGet, "/", query, nil)
+	sess.SignRequest(req, "id", nil)
 	t.Log(req)
 
 	// post
-	payload = `{"page":1,"page_size":10}`
-	req = httpx.NewRequest(http.MethodPost, "/", strings.NewReader(payload))
-	sess.SignRequest(req, "id", []byte(payload))
+	body := `{"page":1,"page_size":10}`
+	req = httpx.NewRequest(http.MethodPost, "/", "", []byte(body))
+	sess.SignRequest(req, "id", []byte(body))
 	t.Log(req)
 }

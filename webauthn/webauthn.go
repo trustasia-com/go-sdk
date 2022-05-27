@@ -2,7 +2,6 @@
 package webauthn
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -51,9 +50,9 @@ func (authn *WebAuthn) StartSignUp(req StartSignUpReq, userID string) (*StartSig
 	if err != nil {
 		return nil, err
 	}
-	loc := "fido-server/" + userID
-	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preregister", bytes.NewReader(data))
-	authn.sess.SignRequest(httpxReq, loc, data)
+	scope := "fido-server/" + userID
+	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preregister", "", data)
+	authn.sess.SignRequest(httpxReq, scope, data)
 	httpxResp, err := authn.httpRequest(httpxReq)
 	if err != nil {
 		return nil, err
@@ -76,7 +75,7 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error
 		return nil, err
 	}
 
-	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/register", bytes.NewReader(data))
+	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/register", "", data)
 	authn.sess.SignRequest(httpxReq, "fido-server/", data)
 	httpxResp, err := authn.httpRequest(httpxReq)
 	if err != nil {
@@ -107,9 +106,9 @@ func (authn *WebAuthn) StartSignIn(req StartSignInReq, userID string) (*StartSig
 	if err != nil {
 		return nil, err
 	}
-	loc := "fido-server/" + userID
-	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", bytes.NewReader(data))
-	authn.sess.SignRequest(httpxReq, loc, data)
+	scope := "fido-server/" + userID
+	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", "", data)
+	authn.sess.SignRequest(httpxReq, scope, data)
 	httpxResp, err := authn.httpRequest(httpxReq)
 	if err != nil {
 		return nil, err
@@ -131,7 +130,7 @@ func (authn *WebAuthn) FinishSignIn(req *http.Request) (*FinishSignInResp, error
 	if err != nil {
 		return nil, err
 	}
-	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/authenticate", bytes.NewReader(data))
+	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/authenticate", "", data)
 	authn.sess.SignRequest(httpxReq, "fido-server/", data)
 	httpxResp, err := authn.httpRequest(httpxReq)
 	if err != nil {

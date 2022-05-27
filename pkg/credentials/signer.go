@@ -36,11 +36,13 @@ const (
 // SignerDefault signatureDefault signer
 //   payload: query or body
 //   header
-func SignerDefault(req *httpx.Request, accessKey, secretKey, location string, payload []byte) {
+func SignerDefault(req *httpx.Request, accessKey, secretKey, scope string, payload []byte) {
 	// set headers
 	now := time.Now().UTC()
 
-	req.SetHeader(httpHeaderCredential, accessKey+"/"+location)
+	// canonicalReq := ""+"\n"+""+"\n"+""
+
+	req.SetHeader(httpHeaderCredential, accessKey+"/"+scope)
 	req.SetHeader(httpHeaderDate, now.Format(iso8601DateFormat))
 	hash := sum256(payload)
 	req.SetHeader(httpHeaderContentHash, hash)
