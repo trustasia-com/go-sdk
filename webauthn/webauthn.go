@@ -83,6 +83,9 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error
 	}
 	scope := "fido-server/"
 	data, err = authn.httpRequest(http.MethodPost, apiRegister, scope, data)
+	if err != nil {
+		return nil, err
+	}
 	resp := &FinishSignUpResp{}
 	err = json.Unmarshal(data, resp)
 	return resp, err
@@ -110,6 +113,9 @@ func (authn *WebAuthn) StartSignIn(req StartSignInReq, userID string) (*StartSig
 	}
 	scope := "fido-server/" + userID
 	data, err = authn.httpRequest(http.MethodPost, apiPreauthenticate, scope, data)
+	if err != nil {
+		return nil, err
+	}
 	resp := &StartSignInResp{
 		AllowCredentials: []types.PublicKeyCredentialDescriptor{},
 		Extensions:       types.AuthenticationExtensionsClientInputs{},
@@ -129,6 +135,9 @@ func (authn *WebAuthn) FinishSignIn(req *http.Request) (*FinishSignInResp, error
 	}
 	scope := "fido-server/"
 	data, err = authn.httpRequest(http.MethodPost, apiAuthenticate, scope, data)
+	if err != nil {
+		return nil, err
+	}
 	resp := &FinishSignInResp{}
 	err = json.Unmarshal(data, resp)
 	return resp, nil
