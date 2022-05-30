@@ -87,8 +87,8 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error
 		return nil, err
 	}
 	resp := &FinishSignUpResp{}
-	err = json.Unmarshal(data, resp)
-	return resp, err
+	_ = json.Unmarshal(data, resp)
+	return resp, nil
 }
 
 // StartSignIn start login
@@ -139,7 +139,7 @@ func (authn *WebAuthn) FinishSignIn(req *http.Request) (*FinishSignInResp, error
 		return nil, err
 	}
 	resp := &FinishSignInResp{}
-	err = json.Unmarshal(data, resp)
+	_ = json.Unmarshal(data, resp)
 	return resp, nil
 }
 
