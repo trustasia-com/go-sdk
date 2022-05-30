@@ -2,32 +2,41 @@
 package webauthn
 
 import (
-	"context"
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 
+	"github.com/trustasia-com/go-sdk/pkg"
+	"github.com/trustasia-com/go-sdk/pkg/client"
 	"github.com/trustasia-com/go-sdk/pkg/credentials"
 	"github.com/trustasia-com/go-sdk/pkg/types"
+)
 
-	"github.com/trustasia-com/go-van/pkg/server"
-	"github.com/trustasia-com/go-van/pkg/server/httpx"
+// api list
+const (
+	apiPreregister     = "/ta-fido-server/preregister"
+	apiRegister        = "/ta-fido-server/register"
+	apiPreauthenticate = "/ta-fido-server/preauthenticate"
+	apiAuthenticate    = "/ta-fido-server/authenticate"
 )
 
 // WebAuthn instance for RP
 type WebAuthn struct {
-	client httpx.Client
-	sess   *credentials.Session
+	userAgent string
+	sess      *credentials.Session
+	client    *http.Client
 }
 
 // New new WebAuthn instance
 func New(sess *credentials.Session) *WebAuthn {
-	cli := httpx.NewClient(
-		server.WithEndpoint(sess.Options.Endpoint),
-	)
-	return &WebAuthn{sess: sess, client: cli}
+	return &WebAuthn{
+		userAgent: pkg.BuildUserAgent(),
+		sess:      sess,
+		client:    client.NewHTTPClient(),
+	}
 }
 
 // StartSignUp start registration process
@@ -51,9 +60,7 @@ func (authn *WebAuthn) StartSignUp(req StartSignUpReq, userID string) (*StartSig
 		return nil, err
 	}
 	scope := "fido-server/" + userID
-	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preregister", "", data)
-	authn.sess.SignRequest(httpxReq, scope, data)
-	httpxResp, err := authn.httpRequest(httpxReq)
+	data, err = authn.httpRequest(http.MethodPost, apiPreregister, scope, data)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +68,7 @@ func (authn *WebAuthn) StartSignUp(req StartSignUpReq, userID string) (*StartSig
 		ExcludeCredentials: []types.PublicKeyCredentialDescriptor{},
 		Extensions:         types.AuthenticationExtensionsClientInputs{},
 	}
-	err = httpxResp.Scan(resp)
+	err = json.Unmarshal(data, resp)
 	return resp, err
 }
 
@@ -74,16 +81,11 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error
 	if err != nil {
 		return nil, err
 	}
-
-	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/register", "", data)
-	authn.sess.SignRequest(httpxReq, "fido-server/", data)
-	httpxResp, err := authn.httpRequest(httpxReq)
-	if err != nil {
-		return nil, err
-	}
+	scope := "fido-server/"
+	data, err = authn.httpRequest(http.MethodPost, apiRegister, scope, data)
 	resp := &FinishSignUpResp{}
-	err = httpxResp.Scan(resp)
-	return resp, nil
+	err = json.Unmarshal(data, resp)
+	return resp, err
 }
 
 // StartSignIn start login
@@ -107,17 +109,12 @@ func (authn *WebAuthn) StartSignIn(req StartSignInReq, userID string) (*StartSig
 		return nil, err
 	}
 	scope := "fido-server/" + userID
-	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/preauthenticate", "", data)
-	authn.sess.SignRequest(httpxReq, scope, data)
-	httpxResp, err := authn.httpRequest(httpxReq)
-	if err != nil {
-		return nil, err
-	}
+	data, err = authn.httpRequest(http.MethodPost, apiPreauthenticate, scope, data)
 	resp := &StartSignInResp{
 		AllowCredentials: []types.PublicKeyCredentialDescriptor{},
 		Extensions:       types.AuthenticationExtensionsClientInputs{},
 	}
-	err = httpxResp.Scan(resp)
+	err = json.Unmarshal(data, resp)
 	return resp, err
 }
 
@@ -130,14 +127,10 @@ func (authn *WebAuthn) FinishSignIn(req *http.Request) (*FinishSignInResp, error
 	if err != nil {
 		return nil, err
 	}
-	httpxReq := httpx.NewRequest(http.MethodPost, "/ta-fido-server/authenticate", "", data)
-	authn.sess.SignRequest(httpxReq, "fido-server/", data)
-	httpxResp, err := authn.httpRequest(httpxReq)
-	if err != nil {
-		return nil, err
-	}
+	scope := "fido-server/"
+	data, err = authn.httpRequest(http.MethodPost, apiAuthenticate, scope, data)
 	resp := &FinishSignInResp{}
-	err = httpxResp.Scan(resp)
+	err = json.Unmarshal(data, resp)
 	return resp, nil
 }
 
@@ -156,20 +149,45 @@ func (authn *WebAuthn) DestroyUser() {
 
 }
 
-func (authn *WebAuthn) httpRequest(req *httpx.Request) (httpx.Response, error) {
-	httpxResp, err := authn.client.Do(context.Background(), req)
+func (authn *WebAuthn) httpRequest(method, path, scope string, data []byte) ([]byte, error) {
+	var (
+		httpReq *http.Request
+		err     error
+	)
+	url := authn.sess.Options.Endpoint + path
+	if len(data) > 0 {
+		httpReq, err = http.NewRequest(method, url, bytes.NewReader(data))
+	} else {
+		httpReq, err = http.NewRequest(method, url, nil)
+	}
+	httpReq.Header.Set("User-Agent", authn.userAgent)
+
+	if err = authn.sess.SignRequest(httpReq, scope); err != nil {
+		return nil, err
+	}
+	httpResp, err := authn.client.Do(httpReq)
 	if err != nil {
-		if len(httpxResp.Data) == 0 {
-			var badResp struct {
+		return nil, err
+	}
+	defer httpResp.Body.Close()
+
+	data, err = io.ReadAll(httpResp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if httpResp.StatusCode/100 != 2 {
+		if len(data) > 0 {
+			var resp struct {
 				Code  int    `json:"code"`
 				Error string `json:"error"`
 			}
-			err2 := httpxResp.Scan(&badResp)
+			err2 := json.Unmarshal(data, &resp)
 			if err2 == nil {
-				err = fmt.Errorf("code: %d, err: %s", badResp.Code, badResp.Error)
+				err = fmt.Errorf("code: %d, err: %s", resp.Code, resp.Error)
 			}
+		} else {
+			err = fmt.Errorf("http code: %d", httpResp.StatusCode)
 		}
-		return httpxResp, err
 	}
-	return httpxResp, nil
+	return data, err
 }

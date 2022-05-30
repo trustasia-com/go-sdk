@@ -6,10 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-
-	"github.com/trustasia-com/go-sdk/pkg"
-	"github.com/trustasia-com/go-van/pkg/logx"
-	"github.com/trustasia-com/go-van/pkg/server/httpx"
+	"net/http"
 )
 
 // api host
@@ -37,6 +34,8 @@ var (
 	ErrInvalidSignature            = errors.New("sdk: invalid signature")
 	ErrInvalidAuthorizationHeader  = errors.New("sdk: invalid Authorization header")
 	ErrNotMatchedAlgorithmServer   = errors.New("sdk: algorithm not matched from server")
+	ErrInvalidHostHeader           = errors.New("sdk: no http header: Host")
+	ErrInvalidCredentialHeader     = errors.New("sdk: invalid Credential header")
 )
 
 // Options session options
@@ -57,7 +56,6 @@ type Session struct {
 
 // New session
 func New(options Options, isProd bool) (*Session, error) {
-	logx.Infof("sdk: name: %s, version: %s", pkg.SDKName, pkg.SDKVersion)
 	// check options
 	if options.AccessKey == "" || options.SecretKey == "" {
 		return nil, errors.New("sdk: accessKey or secretKey not specified")
@@ -73,31 +71,31 @@ func New(options Options, isProd bool) (*Session, error) {
 	return sess, nil
 }
 
-// Sign data
-func (sess *Session) Sign(data []byte) string {
+// SumHMAC data
+func (sess *Session) SumHMAC(data []byte) string {
 	return sumHMAC([]byte(sess.Options.SecretKey), data)
 }
 
 // SignRequest sign & set request header
-func (sess *Session) SignRequest(req *httpx.Request, scope string, payload []byte) {
+func (sess *Session) SignRequest(req *http.Request, scope string) error {
 	var signer Signer
 	switch sess.Options.SignerType {
 
 	default:
 		signer = SignerDefault
 	}
-	signer(req, sess.Options.AccessKey, sess.Options.SecretKey, scope, payload)
+	return signer(req, sess.Options.AccessKey, sess.Options.SecretKey, scope)
 }
 
 // ValidateSig validate the authorization
-func (sess *Session) ValidateSig(resp *httpx.Response, payload []byte) error {
+func (sess *Session) ValidateSig(req *http.Request) ([]string, error) {
 	var validator Validator
 	switch sess.Options.SignerType {
 
 	default:
 		validator = ValidateDefault
 	}
-	return validator(resp, sess.Options.SecretKey, payload)
+	return validator(req, sess.Options.SecretKey)
 }
 
 // sumHMAC calculate hmac between two input byte array.

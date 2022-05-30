@@ -2,20 +2,23 @@
 package credentials
 
 import (
+	"bytes"
+	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
 
 	"github.com/pkg/errors"
-	"github.com/trustasia-com/go-van/pkg/server/httpx"
 )
 
 // Signer sign the request before Do()
-type Signer func(req *httpx.Request, accessKey, secretKey, location string, payload []byte)
+type Signer func(req *http.Request, accessKey, secretKey, scope string) error
 
 // Validator validate the request data
-type Validator func(resp *httpx.Response, secretKey string, payload []byte) error
+type Validator func(req *http.Request, secretKey string) ([]string, error)
 
 // Signature and API related constants.
 const (
@@ -28,7 +31,7 @@ const (
 	httpHeaderDate        = "X-WeKey-Date"
 	httpHeaderCredential  = "X-WeKey-Credential"
 	httpHeaderContentHash = "X-WeKey-Content-Hash"
-	httpHeader
+	httpHeaderHost        = "Host"
 
 	httpHeaderAuthorization = "Authorization"
 )
@@ -36,67 +39,132 @@ const (
 // SignerDefault signatureDefault signer
 //   payload: query or body
 //   header
-func SignerDefault(req *httpx.Request, accessKey, secretKey, scope string, payload []byte) {
+// https://docs.aws.amazon.com/general/latest/gr/sigv4-create-canonical-request.html
+// eg.
+//   GET
+//   /
+//   Action=ListUsers&Version=2010-05-08
+//   content-type:application/x-www-form-urlencoded; charset=utf-8
+//   host:iam.amazonaws.com
+//   x-amz-date:20150830T123600Z
+//
+//   content-type;host;x-amz-date
+//   e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+func SignerDefault(req *http.Request, accessKey, secretKey, scope string) error {
+	// must Host header
+	req.Header.Set(httpHeaderHost, req.Host)
+
+	canonicalReq := bytes.Buffer{}
+	canonicalReq.WriteString(req.Method + "\n") // method
+	path := req.URL.RawPath
+	if path == "" {
+		path = "/"
+	}
+	canonicalReq.WriteString(url.PathEscape(path) + "\n")              // path
+	canonicalReq.WriteString(url.QueryEscape(req.URL.RawQuery) + "\n") // query
+	// other headers
+	signedHeaders, canonicalHeaders := getCanonicalHeaders(req.Header)
+	canonicalReq.WriteString(canonicalHeaders + "\n") // headers
+	canonicalReq.WriteString(signedHeaders + "\n")    // headers
+	var data []byte
+	if req.GetBody != nil {
+		body, err := req.GetBody()
+		if err != nil {
+			return err
+		}
+		data, err = io.ReadAll(body)
+		if err != nil {
+			return err
+		}
+	}
+	hash := sum256(data)
+	canonicalReq.WriteString(hash) // body
+	hash = sum256(canonicalReq.Bytes())
+
 	// set headers
-	now := time.Now().UTC()
+	date := time.Now().UTC().Format(iso8601DateFormat)
+	req.Header.Set(httpHeaderDate, date)
+	req.Header.Set(httpHeaderCredential, accessKey+"/"+scope)
 
-	// canonicalReq := ""+"\n"+""+"\n"+""
-
-	req.SetHeader(httpHeaderCredential, accessKey+"/"+scope)
-	req.SetHeader(httpHeaderDate, now.Format(iso8601DateFormat))
-	hash := sum256(payload)
-	req.SetHeader(httpHeaderContentHash, hash)
-
-	h := req.GetHeader()
-	signedHeaders := getSignedHeaders(h)
-	stringToSign := getStringToSign(h, signedHeaders)
+	stringToSign := fmt.Sprintf("%s\n%s\n%s\n%s",
+		signAlgorithmHMAC,
+		date,
+		scope,
+		hash,
+	)
 	signature := sumHMAC([]byte(secretKey), []byte(stringToSign))
-	auth := []string{
-		strings.Join(signedHeaders, ";"),
-		signature,
-	}
-	req.SetHeader(httpHeaderAuthorization, signAlgorithmHMAC+" "+strings.Join(auth, ","))
-}
-
-// ValidateDefault validate signature
-func ValidateDefault(resp *httpx.Response, secretKey string, payload []byte) error {
-	httpResp := resp.HTTP()
-	auth := httpResp.Header.Get(httpHeaderAuthorization)
-	// check auth header
-	if auth == "" {
-		return ErrNotFoundAuthorizationHeader
-	}
-	// check content hash
-	hash := httpResp.Header.Get(httpHeaderContentHash)
-	if sum256(payload) != hash {
-		return ErrNotMatchedPayloadHash
-	}
-	// check algorithm
-	params := strings.Split(auth, " ")
-	if len(params) != 2 {
-		return ErrInvalidAuthorizationHeader
-	}
-	algo := params[0]
-	if algo != signAlgorithmHMAC {
-		return ErrNotMatchedAlgorithmServer
-	}
-	// check headers
-	params = strings.Split(params[1], ",")
-	if len(params) != 2 {
-		return ErrInvalidAuthorizationHeader
-	}
-	signedHeaders := strings.Split(params[0], ";")
-	stringToSign := getStringToSign(httpResp.Header, signedHeaders)
-
-	gotSig := params[1]
-	expectSig := sumHMAC([]byte(secretKey), []byte(stringToSign))
-	if expectSig != gotSig {
-		return errors.Wrapf(ErrInvalidSignature, "expected %s got %s", expectSig, gotSig)
-	}
+	req.Header.Set(httpHeaderAuthorization, signAlgorithmHMAC+" "+signedHeaders+","+signature)
 	return nil
 }
 
-func getSignedHeaders(h http.Header) []string {
+// ValidateDefault validate signature
+func ValidateDefault(req *http.Request, secretKey string) ([]string, error) {
+	auth := req.Header.Get(httpHeaderAuthorization)
+	// check auth header
+	if auth == "" {
+		return nil, ErrNotFoundAuthorizationHeader
+	}
+	params := strings.Fields(auth)
+	if len(params) != 2 {
+		return nil, ErrInvalidAuthorizationHeader
+	}
+	algo := params[0]
+	if algo != signAlgorithmHMAC {
+		return nil, ErrNotMatchedAlgorithmServer
+	}
+	params = strings.Split(params[1], ",")
+	if len(params) != 2 {
+		return nil, ErrInvalidAuthorizationHeader
+	}
+	// validate signature
+	canonicalReq := bytes.Buffer{}
+	canonicalReq.WriteString(req.Method + "\n") // method
+	path := req.URL.RawPath
+	if path == "" {
+		path = "/"
+	}
+	canonicalReq.WriteString(url.PathEscape(path) + "\n")              // path
+	canonicalReq.WriteString(url.QueryEscape(req.URL.RawQuery) + "\n") // query
+	signedHeaders := params[0]
+	hostHeader, canonicalHeaders := getCanonicalSignedHeaders(req.Header, signedHeaders)
+	if !hostHeader {
+		return nil, ErrInvalidHostHeader
+	}
+	canonicalReq.WriteString(canonicalHeaders + "\n") // headers
+	canonicalReq.WriteString(signedHeaders + "\n")    // header
+	var data []byte
+	if req.Body != http.NoBody {
+		var err error
+		data, err = io.ReadAll(req.Body)
+		if err != nil {
+			return nil, err
+		}
+		req.Body = io.NopCloser(bytes.NewReader(data))
+	}
+	hash := sum256(data)
+	canonicalReq.WriteString(hash) // body
+	hash = sum256(canonicalReq.Bytes())
+
+	date := req.Header.Get(httpHeaderDate)
+	credential := req.Header.Get(httpHeaderCredential)
+	cred := strings.SplitN(credential, "/", 2)
+	if len(cred) != 2 {
+		return nil, ErrInvalidCredentialHeader
+	}
+	stringToSign := fmt.Sprintf("%s\n%s\n%s\n%s",
+		signAlgorithmHMAC,
+		date,
+		cred[1],
+		hash,
+	)
+	expectSig := sumHMAC([]byte(secretKey), []byte(stringToSign))
+	if expectSig != params[1] {
+		return nil, errors.Wrapf(ErrInvalidSignature, "expected %s got %s", expectSig, params[1])
+	}
+	return cred, nil
+}
+
+func getCanonicalHeaders(h http.Header) (string, string) {
 	var hs []string
 
 	for k := range h {
@@ -109,14 +177,26 @@ func getSignedHeaders(h http.Header) []string {
 		hs = append(hs, strings.ToLower(k))
 	}
 	sort.Strings(hs)
-	return hs
+
+	buf := bytes.Buffer{}
+	for _, v := range hs {
+		buf.WriteString(strings.ToLower(v) + ":" + h.Get(v) + "\n")
+	}
+	return strings.Join(hs, ";"), buf.String()
 }
 
-func getStringToSign(h http.Header, headers []string) string {
-	stringToSign := signAlgorithmHMAC
-	for _, k := range headers {
-		v := h.Get(k)
-		stringToSign += "\n" + v
+func getCanonicalSignedHeaders(h http.Header, signedHeaders string) (bool, string) {
+	headers := strings.Split(signedHeaders, ";")
+
+	buf := bytes.Buffer{}
+	hostHeader := false
+	for _, v := range headers {
+		lv := strings.ToLower(v)
+		buf.WriteString(v + ":" + h.Get(v) + "\n")
+
+		if lv == "host" {
+			hostHeader = true
+		}
 	}
-	return stringToSign
+	return hostHeader, buf.String()
 }
