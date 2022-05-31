@@ -60,8 +60,12 @@ func SignerDefault(req *http.Request, accessKey, secretKey, scope string) error 
 	if path == "" {
 		path = "/"
 	}
-	canonicalReq.WriteString(url.PathEscape(path) + "\n")              // path
-	canonicalReq.WriteString(url.QueryEscape(req.URL.RawQuery) + "\n") // query
+	canonicalReq.WriteString(path + "\n") // path
+	vals, err := url.ParseQuery(req.URL.RawQuery)
+	if err != nil {
+		return err
+	}
+	canonicalReq.WriteString(vals.Encode() + "\n") // query
 	// other headers
 	signedHeaders, canonicalHeaders := getCanonicalHeaders(req.Header)
 	canonicalReq.WriteString(canonicalHeaders + "\n") // headers
@@ -123,8 +127,12 @@ func ValidateDefault(req *http.Request, secretKey string) ([]string, error) {
 	if path == "" {
 		path = "/"
 	}
-	canonicalReq.WriteString(url.PathEscape(path) + "\n")              // path
-	canonicalReq.WriteString(url.QueryEscape(req.URL.RawQuery) + "\n") // query
+	canonicalReq.WriteString(path + "\n") // path
+	vals, err := url.ParseQuery(req.URL.RawQuery)
+	if err != nil {
+		return nil, err
+	}
+	canonicalReq.WriteString(vals.Encode() + "\n") // query
 	signedHeaders := params[0]
 	hostHeader, canonicalHeaders := getCanonicalSignedHeaders(req.Header, signedHeaders)
 	if !hostHeader {
