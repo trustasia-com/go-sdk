@@ -28,10 +28,8 @@ const (
 
 // http header
 const (
-	httpHeaderDate        = "X-WeKey-Date"
-	httpHeaderCredential  = "X-WeKey-Credential"
-	httpHeaderContentHash = "X-WeKey-Content-Hash"
-	httpHeaderHost        = "Host"
+	httpHeaderDate = "X-WeKey-Date"
+	httpHeaderHost = "Host"
 
 	httpHeaderAuthorization = "Authorization"
 )
@@ -88,7 +86,7 @@ func SignerDefault(req *http.Request, accessKey, secretKey, scope string) error 
 	// set headers
 	date := time.Now().UTC().Format(iso8601DateFormat)
 	req.Header.Set(httpHeaderDate, date)
-	req.Header.Set(httpHeaderCredential, accessKey+"/"+scope)
+	credential := accessKey + "/" + scope
 
 	stringToSign := fmt.Sprintf("%s\n%s\n%s\n%s",
 		signAlgorithmHMAC,
@@ -97,12 +95,13 @@ func SignerDefault(req *http.Request, accessKey, secretKey, scope string) error 
 		hash,
 	)
 	signature := sumHMAC([]byte(secretKey), []byte(stringToSign))
-	req.Header.Set(httpHeaderAuthorization, signAlgorithmHMAC+" "+signedHeaders+","+signature)
+	req.Header.Set(httpHeaderAuthorization, signAlgorithmHMAC+" "+credential+","+signedHeaders+","+signature)
 	return nil
 }
 
 // ValidateDefault validate signature
 func ValidateDefault(req *http.Request, secretKey string) ([]string, error) {
+	// Authorization: algorithm <access key ID>/<credential scope>,SignedHeaders,signature
 	auth := req.Header.Get(httpHeaderAuthorization)
 	// check auth header
 	if auth == "" {
@@ -117,8 +116,13 @@ func ValidateDefault(req *http.Request, secretKey string) ([]string, error) {
 		return nil, ErrNotMatchedAlgorithmServer
 	}
 	params = strings.Split(params[1], ",")
-	if len(params) != 2 {
+	if len(params) != 3 {
 		return nil, ErrInvalidAuthorizationHeader
+	}
+	// credential
+	cred := strings.SplitN(params[0], "/", 2)
+	if len(cred) != 2 {
+		return nil, ErrInvalidCredentialHeader
 	}
 	// validate signature
 	canonicalReq := bytes.Buffer{}
@@ -133,7 +137,7 @@ func ValidateDefault(req *http.Request, secretKey string) ([]string, error) {
 		return nil, err
 	}
 	canonicalReq.WriteString(vals.Encode() + "\n") // query
-	signedHeaders := params[0]
+	signedHeaders := params[1]
 	hostHeader, canonicalHeaders := getCanonicalSignedHeaders(req.Header, signedHeaders)
 	if !hostHeader {
 		return nil, ErrInvalidHostHeader
@@ -154,20 +158,15 @@ func ValidateDefault(req *http.Request, secretKey string) ([]string, error) {
 	hash = sum256(canonicalReq.Bytes())
 
 	date := req.Header.Get(httpHeaderDate)
-	credential := req.Header.Get(httpHeaderCredential)
-	cred := strings.SplitN(credential, "/", 2)
-	if len(cred) != 2 {
-		return nil, ErrInvalidCredentialHeader
-	}
 	stringToSign := fmt.Sprintf("%s\n%s\n%s\n%s",
 		signAlgorithmHMAC,
 		date,
-		cred[1],
+		cred[1], // scope
 		hash,
 	)
 	expectSig := sumHMAC([]byte(secretKey), []byte(stringToSign))
-	if expectSig != params[1] {
-		return nil, errors.Wrapf(ErrInvalidSignature, "expected %s got %s", expectSig, params[1])
+	if expectSig != params[2] {
+		return nil, errors.Wrapf(ErrInvalidSignature, "expected %s got %s", expectSig, params[2])
 	}
 	return cred, nil
 }
