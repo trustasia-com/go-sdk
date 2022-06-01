@@ -143,5 +143,21 @@ func (f *Finance) httpRequest(method, path, scope string, data []byte) ([]byte, 
 	}
 	defer httpResp.Body.Close()
 
-	return io.ReadAll(httpResp.Body)
+	data, err = io.ReadAll(httpResp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var msg struct {
+		Code  int             `json:"code"`
+		Data  json.RawMessage `json:"data"`
+		Error string          `json:"error"`
+	}
+	err = json.Unmarshal(data, &msg)
+	if err != nil {
+		return nil, err
+	}
+	if msg.Code != 0 {
+		return nil, errors.New(msg.Error)
+	}
+	return msg.Data, nil
 }
