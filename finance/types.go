@@ -1,7 +1,10 @@
 // Package finance provides ...
 package finance
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // PaymentDetail 付款详细
 type PaymentDetail struct {
@@ -42,11 +45,12 @@ type PaymentCreateReq struct {
 	UserID   string `json:"user_id"`
 	Nickname string `json:"nickname"`
 
-	OrderID string `json:"order_id"`
-	Subject string `json:"subject"`
-	Amount  int    `json:"amount"`
-	Note    string `json:"note"`
-	Timeout int    `json:"timeout"`
+	OrderID   string `json:"order_id"`
+	Subject   string `json:"subject"`
+	Amount    int    `json:"amount"`
+	Note      string `json:"note"`
+	Timeout   int    `json:"timeout"`
+	ReturnURL string `json:"return_url"`
 }
 
 // PaymentCreateResp resp
@@ -62,4 +66,23 @@ type PaymentRefundReq struct {
 // PaymentRefundResp resp
 type PaymentRefundResp struct {
 	PaymentID string `json:"payment_id"`
+}
+
+// PaymentDo 操作类型
+type PaymentDo string
+
+// payment action
+var (
+	PaymentDoDeliver PaymentDo = "deliver"
+	PaymentDoRefund  PaymentDo = "refund"
+)
+
+// PaymentCallback 回调请求
+type PaymentCallback struct {
+	MchID   string          `json:"mch_id"`
+	Do      PaymentDo       `json:"do"` // 发货 deliver， 退货 refund
+	Nonce   string          `json:"nonce"`
+	Content json.RawMessage `json:"content"`
+
+	Sign string `json:"sign"`
 }

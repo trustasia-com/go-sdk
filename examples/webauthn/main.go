@@ -3,10 +3,10 @@ package main
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/trustasia-com/go-sdk/examples"
 	"github.com/trustasia-com/go-sdk/pkg/credentials"
 	"github.com/trustasia-com/go-sdk/webauthn"
 )
@@ -17,18 +17,12 @@ type user struct {
 	Nickname string
 }
 
-type message struct {
-	Code  int         `json:"code"`
-	Data  interface{} `json:"data"`
-	Error string      `json:"error"`
-}
-
 func main() {
 	// create credential
 	opts := credentials.Options{
 		AccessKey:  "c676aeb85dc2c553",
 		SecretKey:  "a290bc6da6318e5aaf18da9a29bc6ec2",
-		Endpoint:   "https://api-dev.wekey.com",
+		Endpoint:   "https://api-dev.wekey.cn",
 		SignerType: credentials.SignatureDefault,
 	}
 	sess, err := credentials.New(opts, true)
@@ -38,7 +32,6 @@ func main() {
 	// create client
 	client := webauthn.New(sess)
 
-	// 这里以 gin 为例子
 	// index.html
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "index.html")
@@ -58,19 +51,19 @@ func main() {
 		}
 		data, err := client.StartSignUp(req, userID)
 		if err != nil {
-			respWithJSON(w, 400, nil, err)
+			examples.RespWithJSON(w, 400, nil, err)
 			return
 		}
 		// 响应给前端
-		respWithJSON(w, 200, data, nil)
+		examples.RespWithJSON(w, 200, data, nil)
 	})
 	http.HandleFunc("/attestation/result", func(w http.ResponseWriter, r *http.Request) {
 		data, err := client.FinishSignUp(r)
 		if err != nil {
-			respWithJSON(w, 400, nil, err)
+			examples.RespWithJSON(w, 400, nil, err)
 			return
 		}
-		respWithJSON(w, 200, data, nil)
+		examples.RespWithJSON(w, 200, data, nil)
 	})
 	// login
 	http.HandleFunc("/assertion/options", func(w http.ResponseWriter, r *http.Request) {
@@ -84,35 +77,22 @@ func main() {
 		}
 		data, err := client.StartSignIn(req, userID)
 		if err != nil {
-			respWithJSON(w, 400, nil, err)
+			examples.RespWithJSON(w, 400, nil, err)
 			return
 		}
-		respWithJSON(w, 200, data, nil)
+		examples.RespWithJSON(w, 200, data, nil)
 	})
 	http.HandleFunc("/assertion/result", func(w http.ResponseWriter, r *http.Request) {
 		data, err := client.FinishSignIn(r)
 		if err != nil {
-			respWithJSON(w, 400, nil, err)
+			examples.RespWithJSON(w, 400, nil, err)
 			return
 		}
-		respWithJSON(w, 200, data, nil)
+		// 如果这里err == nil，代表注册成功
+		// 设置 cookie
+		examples.RespWithJSON(w, 200, data, nil)
 	})
 	port := "9000"
 	fmt.Println("listen and serve: " + port)
 	http.ListenAndServe(":"+port, nil)
-}
-
-func respWithJSON(w http.ResponseWriter, httpCode int, data interface{}, err error) {
-	msg := message{}
-	if httpCode != 200 {
-		msg.Code = 1
-	}
-	msg.Data = data
-	if err != nil {
-		fmt.Println(err)
-		msg.Error = err.Error()
-	}
-	raw, _ := json.Marshal(msg)
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(raw)
 }

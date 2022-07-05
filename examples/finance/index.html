@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+  </head>
+  <body>
+    <div>登录用户: {{.User.Nickname}}, 用户ID: {{.User.ID}}</div>
+    <div>当前订单</div>
+    <table border>
+      <tr>
+        <th>订单ID</th>
+        <th>订单标题</th>
+        <th>订单状态</th>
+      </tr>
+      <tr>
+        <td>{{.Order.ID}}</td>
+        <td>{{.Order.Title}}</td>
+        <td>{{.Order.Status}}</td>
+      </tr>
+    </table>
+    <button id="pay" onclick="createPayment()">前往付款</button>
+    <script type="text/javascript">
+      function createPayment() {
+              return fetch('http://localhost:9000/create', {
+                      method: 'POST',
+                      body: JSON.stringify({"order_id": {{.Order.ID}}})
+              })
+                .then(response=>response.json())
+                .then(response=>{
+                        if (response.code !== 0) {
+                            alert(`Server responed with error. The message is: ${response.error}`);
+                                return
+                        }
+                        console.log(response.data)
+                        window.location.href = response.data
+                })
+
+      }
+    </script>
+  </body>
+</html>

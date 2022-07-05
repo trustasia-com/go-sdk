@@ -109,6 +109,9 @@ func (f *Finance) PaymentCreate(req PaymentCreateReq) (*PaymentCreateResp, error
 // PaymentRefund refund specify payment
 func (f *Finance) PaymentRefund(req PaymentRefundReq) (*PaymentRefundResp, error) {
 	// check input
+	if req.PaymentID == "" {
+		return nil, errors.New("Invalid req.Payment specify")
+	}
 
 	path := fmt.Sprintln(apiPaymentsRefund, req.PaymentID)
 	scope := "finance/"
@@ -119,6 +122,29 @@ func (f *Finance) PaymentRefund(req PaymentRefundReq) (*PaymentRefundResp, error
 	resp := &PaymentRefundResp{}
 	err = json.Unmarshal(data, resp)
 	return resp, err
+}
+
+// PaymentCallback callback
+func (f *Finance) PaymentCallback(r *http.Request) (*PaymentCallback, error) {
+	data, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	req := &PaymentCallback{}
+	err = json.Unmarshal(data, req)
+	if err != nil {
+		return nil, err
+	}
+	// validate signature
+	vals := url.Values{}
+	vals.Set("mch_id", req.MchID)
+	vals.Set("do", string(req.Do))
+	vals.Set("nonce", req.Nonce)
+	vals.Set("content", string(req.Content))
+	if req.Sign != f.sess.SumHMAC([]byte(vals.Encode())) {
+		return nil, errors.New("failed to validate signature")
+	}
+	return req, nil
 }
 
 func (f *Finance) httpRequest(method, path, scope string, data []byte) ([]byte, error) {
