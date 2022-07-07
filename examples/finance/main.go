@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/trustasia-com/go-sdk/examples"
 	"github.com/trustasia-com/go-sdk/finance"
@@ -70,6 +71,13 @@ func main() {
 	}
 	// index页面
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		r.ParseForm()
+
+		if r.FormValue("recreate") == "true" {
+			ts := time.Now().Unix()
+			userOrder.User.ID = fmt.Sprintf("test_user_id%d", ts)
+			userOrder.Order.ID = fmt.Sprintf("test_order_title%d", ts)
+		}
 		err := t.Execute(w, userOrder)
 		if err != nil {
 			panic(err)
