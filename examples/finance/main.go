@@ -2,6 +2,7 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -50,6 +51,9 @@ func init() {
 	userOrder.Order = o
 }
 
+//go:embed *.html
+var f embed.FS
+
 func main() {
 	// create credential
 	opts := credentials.Options{
@@ -65,7 +69,7 @@ func main() {
 
 	cli := finance.New(sess)
 
-	t, err := template.ParseGlob("*.html")
+	t, err := template.ParseFS(f, "*.html")
 	if err != nil {
 		panic(err)
 	}
