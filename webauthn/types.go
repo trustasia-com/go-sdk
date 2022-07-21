@@ -29,6 +29,8 @@ type StartSignUpResp struct {
 
 // FinishSignUpReq sign up request
 type FinishSignUpReq struct {
+	Name string `json:"name"` // 凭证/设备名称
+
 	ID       string                        `json:"id"`
 	RawID    string                        `json:"rawId"`
 	Type     types.PublicKeyCredentialType `json:"type"`
