@@ -45,12 +45,13 @@ type PaymentCreateReq struct {
 	UserID   string `json:"user_id"`
 	Nickname string `json:"nickname"`
 
-	OrderID   string `json:"order_id"`
-	Subject   string `json:"subject"`
-	Amount    int    `json:"amount"`
-	Note      string `json:"note"`
-	Timeout   int    `json:"timeout"`
-	ReturnURL string `json:"return_url"`
+	OrderID     string `json:"order_id"`
+	Subject     string `json:"subject"`
+	Amount      int    `json:"amount"`
+	Note        string `json:"note"`
+	Timeout     int    `json:"timeout"`
+	ReturnURL   string `json:"return_url"`
+	ProductCode string `json:"product_code"`
 }
 
 // PaymentCreateResp resp
@@ -73,8 +74,9 @@ type PaymentDo string
 
 // payment action
 var (
-	PaymentDoDeliver PaymentDo = "deliver"
-	PaymentDoRefund  PaymentDo = "refund"
+	PaymentDoDeliver PaymentDo = "deliver" // 发货
+	PaymentDoRefund  PaymentDo = "refund"  // 退款
+	PaymentDoRenew   PaymentDo = "renew"   // 订阅更新
 )
 
 // PaymentCallback 回调请求
@@ -85,4 +87,21 @@ type PaymentCallback struct {
 	Content json.RawMessage `json:"content"`
 
 	Sign string `json:"sign"`
+}
+
+// SubscribeCreateReq 创建订阅单
+type SubscribeCreateReq struct {
+	UserID   string `json:"user_id"`
+	Nickname string `json:"nickname"`
+
+	Subject     string `json:"subject"`
+	Amount      int    `json:"amount"`
+	Period      int    `json:"period"`
+	ReturnURL   string `json:"return_url"`
+	ProductCode string `json:"product_code"`
+}
+
+// SubscribeCreateResp 响应
+type SubscribeCreateResp struct {
+	ReturnURL string `json:"return_url"`
 }

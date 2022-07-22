@@ -20,6 +20,8 @@ const (
 	apiPaymentsList   = "/ta-finance/payments"
 	apiPaymentsCreate = "/ta-finance/payments"
 	apiPaymentsRefund = "/ta-finance/payments/%s/refund"
+
+	apiSubscribeCreate = "/ta-finance/subscribe"
 )
 
 // Finance instance for RP
@@ -91,6 +93,9 @@ func (f *Finance) PaymentCreate(req PaymentCreateReq) (*PaymentCreateResp, error
 	if req.Timeout < 60 {
 		return nil, errors.New("Invalid req.Timeout specify, should more than 60")
 	}
+	if req.ProductCode == "" {
+		return nil, errors.New("Need specify req.ProductCode")
+	}
 
 	data, err := json.Marshal(req)
 	if err != nil {
@@ -145,6 +150,42 @@ func (f *Finance) PaymentCallback(r *http.Request) (*PaymentCallback, error) {
 		return nil, errors.New("failed to validate signature")
 	}
 	return req, nil
+}
+
+// SubscribeCreate create subscribe
+func (f *Finance) SubscribeCreate(req SubscribeCreateReq) (*SubscribeCreateResp, error) {
+	// check input
+	if req.UserID == "" {
+		return nil, errors.New("Need specify req.UserID")
+	}
+	if req.Nickname == "" {
+		return nil, errors.New("Need specify req.Username")
+	}
+	if req.Subject == "" {
+		return nil, errors.New("Need specify req.OrderID")
+	}
+	if req.Amount < 0 {
+		return nil, errors.New("Need specify req.Subject")
+	}
+	if req.Period < 0 {
+		return nil, errors.New("Invalid req.Amount specify")
+	}
+	if req.ProductCode == "" {
+		return nil, errors.New("Need specify req.ProductCode")
+	}
+
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	scope := "finance/"
+	data, err = f.httpRequest(http.MethodPost, apiSubscribeCreate, scope, data)
+	if err != nil {
+		return nil, err
+	}
+	resp := &SubscribeCreateResp{}
+	err = json.Unmarshal(data, resp)
+	return resp, err
 }
 
 func (f *Finance) httpRequest(method, path, scope string, data []byte) ([]byte, error) {
