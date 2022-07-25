@@ -93,8 +93,8 @@ func (f *Finance) PaymentCreate(req PaymentCreateReq) (*PaymentCreateResp, error
 	if req.Timeout < 60 {
 		return nil, errors.New("Invalid req.Timeout specify, should more than 60")
 	}
-	if req.ProductCode == "" {
-		return nil, errors.New("Need specify req.ProductCode")
+	if req.ProductID == "" {
+		return nil, errors.New("Need specify req.ProductID")
 	}
 
 	data, err := json.Marshal(req)
@@ -161,17 +161,8 @@ func (f *Finance) SubscribeCreate(req SubscribeCreateReq) (*SubscribeCreateResp,
 	if req.Nickname == "" {
 		return nil, errors.New("Need specify req.Username")
 	}
-	if req.Subject == "" {
-		return nil, errors.New("Need specify req.OrderID")
-	}
-	if req.Amount < 0 {
-		return nil, errors.New("Need specify req.Subject")
-	}
-	if req.Period < 0 {
-		return nil, errors.New("Invalid req.Amount specify")
-	}
-	if req.ProductCode == "" {
-		return nil, errors.New("Need specify req.ProductCode")
+	if req.ProductID == "" {
+		return nil, errors.New("Need specify req.ProductID")
 	}
 
 	data, err := json.Marshal(req)

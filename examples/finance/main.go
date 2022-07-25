@@ -115,13 +115,14 @@ func main() {
 			UserID:   userOrder.User.ID,
 			Nickname: userOrder.User.Nickname,
 
-			OrderID:     userOrder.Order.ID,
-			Subject:     userOrder.Order.Title,
-			Amount:      userOrder.Order.Amount,
-			Note:        "note",
-			Timeout:     3600,
-			ReturnURL:   "http://localhost:9000?order_id=" + userOrder.Order.ID,
-			ProductCode: "test_product_code",
+			BusinessCode: "temp",
+			OrderID:      userOrder.Order.ID,
+			Subject:      userOrder.Order.Title,
+			Amount:       userOrder.Order.Amount,
+			Note:         "note",
+			Timeout:      3600,
+			ReturnURL:    "https://temp.wekey.cn?order_id=" + userOrder.Order.ID,
+			ProductID:    "test_product_code",
 		}
 
 		resp, err := cli.PaymentCreate(req)
@@ -137,18 +138,15 @@ func main() {
 			UserID:   userOrder.User.ID,
 			Nickname: userOrder.User.Nickname,
 
-			Subject:     userOrder.Order.Title,
-			Amount:      userOrder.Order.Amount,
-			Period:      7,
-			ReturnURL:   "https://temp.wekey.cn?order_id=" + userOrder.Order.ID,
-			ProductCode: "test_product_code_subscribe",
+			ReturnURL: "https://temp.wekey.cn?order_id=" + userOrder.Order.ID,
+			ProductID: "test_product_code_subscribe",
 		}
 		resp, err := cli.SubscribeCreate(req)
 		if err != nil {
 			examples.RespWithJSON(w, 400, nil, err)
 			return
 		}
-		examples.RespWithJSON(w, 200, resp.ReturnURL, nil)
+		examples.RespWithJSON(w, 200, resp, nil)
 	})
 	// 回调
 	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {

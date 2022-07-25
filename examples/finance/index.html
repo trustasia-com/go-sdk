@@ -55,6 +55,22 @@
                 })
 
       }
+      function createSubscribe() {
+              return fetch('/subscribe', {
+                      method: 'POST',
+                      body: JSON.stringify({"order_id": {{.Order.ID}}})
+              })
+                .then(response=>response.json())
+                .then(response=>{
+                        if (response.code !== 0) {
+                            alert(`Server responed with error. The message is: ${response.error}`);
+                                return
+                        }
+                        console.log(response.data)
+                        window.location.href = response.data.return_url
+                })
+
+      }
     </script>
   </body>
 </html>

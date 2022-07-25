@@ -45,13 +45,14 @@ type PaymentCreateReq struct {
 	UserID   string `json:"user_id"`
 	Nickname string `json:"nickname"`
 
-	OrderID     string `json:"order_id"`
-	Subject     string `json:"subject"`
-	Amount      int    `json:"amount"`
-	Note        string `json:"note"`
-	Timeout     int    `json:"timeout"`
-	ReturnURL   string `json:"return_url"`
-	ProductCode string `json:"product_code"`
+	BusinessCode string `json:"business_code"`
+	OrderID      string `json:"order_id"`
+	Subject      string `json:"subject"`
+	Amount       int    `json:"amount"`
+	Note         string `json:"note"`
+	Timeout      int    `json:"timeout"`
+	ReturnURL    string `json:"return_url"`
+	ProductID    string `json:"product_id"`
 }
 
 // PaymentCreateResp resp
@@ -94,14 +95,12 @@ type SubscribeCreateReq struct {
 	UserID   string `json:"user_id"`
 	Nickname string `json:"nickname"`
 
-	Subject     string `json:"subject"`
-	Amount      int    `json:"amount"`
-	Period      int    `json:"period"`
-	ReturnURL   string `json:"return_url"`
-	ProductCode string `json:"product_code"`
+	ReturnURL string `json:"return_url"`
+	ProductID string `json:"product_id"`
 }
 
 // SubscribeCreateResp 响应
 type SubscribeCreateResp struct {
-	ReturnURL string `json:"return_url"`
+	SubscribeID string `json:"subscribe_id"`
+	ReturnURL   string `json:"return_url"`
 }
