@@ -119,7 +119,7 @@ func main() {
 			OrderID:      userOrder.Order.ID,
 			Subject:      userOrder.Order.Title,
 			Amount:       userOrder.Order.Amount,
-			Note:         "note",
+			Note:         "note2",
 			Timeout:      3600,
 			ReturnURL:    "https://temp.wekey.cn?order_id=" + userOrder.Order.ID,
 			ProductID:    "test_product_code",
@@ -147,6 +147,9 @@ func main() {
 			return
 		}
 		examples.RespWithJSON(w, 200, resp, nil)
+	})
+	http.HandleFunc("/plan", func(w http.ResponseWriter, r *http.Request) {
+		examples.RespWithJSON(w, 200, userOrder.Order, nil)
 	})
 	// 回调
 	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
@@ -182,5 +185,5 @@ func main() {
 
 		}
 	})
-	http.ListenAndServe(":9000", nil)
+	http.ListenAndServe(":12345", nil)
 }
