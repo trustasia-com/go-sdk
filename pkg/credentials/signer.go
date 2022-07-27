@@ -54,7 +54,7 @@ func SignerDefault(req *http.Request, accessKey, secretKey, scope string) error 
 
 	canonicalReq := bytes.Buffer{}
 	canonicalReq.WriteString(req.Method + "\n") // method
-	path := req.URL.RawPath
+	path := req.URL.Path
 	if path == "" {
 		path = "/"
 	}
