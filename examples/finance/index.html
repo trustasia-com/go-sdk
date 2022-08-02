@@ -21,7 +21,7 @@
       </tr>
     </table>
     <button id="pay" onclick="createPayment()">前往付款</button>
-    <button id="pay" onclick="createSubscribe()">月卡订阅</button>
+    <button id="subscribe" onclick="createSubscribe()">月卡订阅</button>
     <script type="text/javascript">
       function createPayment() {
               return fetch('/create', {
@@ -51,23 +51,7 @@
                                 return
                         }
                         console.log(response.data)
-                        window.location.href = response.data
-                })
-
-      }
-      function createSubscribe() {
-              return fetch('/subscribe', {
-                      method: 'POST',
-                      body: JSON.stringify({"order_id": {{.Order.ID}}})
-              })
-                .then(response=>response.json())
-                .then(response=>{
-                        if (response.code !== 0) {
-                            alert(`Server responed with error. The message is: ${response.error}`);
-                                return
-                        }
-                        console.log(response.data)
-                        window.location.href = response.data.return_url
+                        window.location.href = response.data.redirect
                 })
 
       }

@@ -101,6 +101,8 @@ type SubscribeCreateReq struct {
 
 // SubscribeCreateResp 响应
 type SubscribeCreateResp struct {
-	SubscribeID string `json:"subscribe_id"`
-	ReturnURL   string `json:"return_url"`
+	Status string `json:"status"`
+	Token  string `json:"token"`
+
+	Redirect string `json:"redirect,omitempty"`
 }

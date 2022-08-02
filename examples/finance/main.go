@@ -57,9 +57,10 @@ var f embed.FS
 func main() {
 	// create credential
 	opts := credentials.Options{
-		AccessKey:  "test_mch",
-		SecretKey:  "bff149a0b87f5b0e00d9dd364e9ddaa0",
-		Endpoint:   "https://pay-dev.wekey.cn",
+		AccessKey: "test_mch",
+		SecretKey: "bff149a0b87f5b0e00d9dd364e9ddaa0",
+		Endpoint:  "https://pay-dev.wekey.cn",
+		// Endpoint:   "http://localhost:9000",
 		SignerType: credentials.SignatureDefault,
 	}
 	sess, err := credentials.New(opts, true)
