@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.1.3](https://github.com/trustasia-com/go-sdk/compare/v0.1.2...v0.1.3) (2022-08-02)
+
+
+### Bug Fixes
+
+* **pkg:** 修复签名参数错误 ([5e52987](https://github.com/trustasia-com/go-sdk/commit/5e52987b13f128ac752835c9570710109a2f507d))
+
 ### 0.1.1 (2022-05-30)
 
 
