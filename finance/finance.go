@@ -129,13 +129,13 @@ func (f *Finance) PaymentRefund(req PaymentRefundReq) (*PaymentRefundResp, error
 	return resp, err
 }
 
-// PaymentCallback callback
-func (f *Finance) PaymentCallback(r *http.Request) (*PaymentCallback, error) {
+// FinanceCallback callback
+func (f *Finance) FinanceCallback(r *http.Request) (*CallbackFinanceReq, error) {
 	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
-	req := &PaymentCallback{}
+	req := &CallbackFinanceReq{}
 	err = json.Unmarshal(data, req)
 	if err != nil {
 		return nil, err

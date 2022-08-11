@@ -154,7 +154,7 @@ func main() {
 	})
 	// 回调
 	http.HandleFunc("/callback", func(w http.ResponseWriter, r *http.Request) {
-		req, err := cli.PaymentCallback(r)
+		req, err := cli.FinanceCallback(r)
 		if err != nil {
 			examples.RespWithJSON(w, 400, nil, err)
 			return

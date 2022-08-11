@@ -2,7 +2,6 @@
 package finance
 
 import (
-	"encoding/json"
 	"time"
 )
 
@@ -80,12 +79,12 @@ var (
 	PaymentDoRenew   PaymentDo = "renew"   // 订阅更新
 )
 
-// PaymentCallback 回调请求
-type PaymentCallback struct {
-	MchID   string          `json:"mch_id"`
-	Do      PaymentDo       `json:"do"` // 发货 deliver， 退货 refund
-	Nonce   string          `json:"nonce"`
-	Content json.RawMessage `json:"content"`
+// CallbackFinanceReq 回调请求
+type CallbackFinanceReq struct {
+	MchID   string    `json:"mch_id"`
+	Do      PaymentDo `json:"do"` // 发货 deliver， 退货 refund
+	Nonce   string    `json:"nonce"`
+	Content []byte    `json:"content"`
 
 	Sign string `json:"sign"`
 }
