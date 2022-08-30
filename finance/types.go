@@ -84,7 +84,7 @@ type CallbackFinanceReq struct {
 	MchID   string    `json:"mch_id"`
 	Do      PaymentDo `json:"do"` // 发货 deliver， 退货 refund
 	Nonce   string    `json:"nonce"`
-	Content []byte    `json:"content"`
+	Content string    `json:"content"` // std base64
 
 	Sign string `json:"sign"`
 }

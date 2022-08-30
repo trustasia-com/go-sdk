@@ -3,6 +3,7 @@ package main
 
 import (
 	"embed"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -165,7 +166,12 @@ func main() {
 			var content struct {
 				OrderID string `json:"order_id"`
 			}
-			err = json.Unmarshal(req.Content, &content)
+			data, err := base64.StdEncoding.DecodeString(req.Content)
+			if err != nil {
+				examples.RespWithJSON(w, 400, nil, errors.New("非base64数据"))
+				return
+			}
+			err = json.Unmarshal(data, &content)
 			if err != nil {
 				examples.RespWithJSON(w, 400, nil, errors.New("发货内容不对"))
 				return
