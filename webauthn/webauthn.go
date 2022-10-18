@@ -12,6 +12,7 @@ import (
 	"github.com/trustasia-com/go-sdk/pkg"
 	"github.com/trustasia-com/go-sdk/pkg/client"
 	"github.com/trustasia-com/go-sdk/pkg/credentials"
+	"github.com/trustasia-com/go-sdk/pkg/message"
 	"github.com/trustasia-com/go-sdk/pkg/types"
 )
 
@@ -60,15 +61,12 @@ func (authn *WebAuthn) StartSignUp(req StartSignUpReq, userID string) (*StartSig
 		return nil, err
 	}
 	scope := "fido-server/" + userID
-	data, err = authn.httpRequest(http.MethodPost, apiPreregister, scope, data)
+	msg, err := authn.httpRequest(http.MethodPost, apiPreregister, scope, data)
 	if err != nil {
 		return nil, err
 	}
-	resp := &StartSignUpResp{
-		ExcludeCredentials: []types.PublicKeyCredentialDescriptor{},
-		Extensions:         types.AuthenticationExtensionsClientInputs{},
-	}
-	err = json.Unmarshal(data, resp)
+	resp := &StartSignUpResp{}
+	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
@@ -82,13 +80,13 @@ func (authn *WebAuthn) FinishSignUp(req *http.Request) (*FinishSignUpResp, error
 		return nil, err
 	}
 	scope := "fido-server/"
-	data, err = authn.httpRequest(http.MethodPost, apiRegister, scope, data)
+	msg, err := authn.httpRequest(http.MethodPost, apiRegister, scope, data)
 	if err != nil {
 		return nil, err
 	}
 	resp := &FinishSignUpResp{}
-	_ = json.Unmarshal(data, resp)
-	return resp, nil
+	err = json.Unmarshal(msg.Data, resp)
+	return resp, err
 }
 
 // StartSignIn start login
@@ -112,15 +110,12 @@ func (authn *WebAuthn) StartSignIn(req StartSignInReq, userID string) (*StartSig
 		return nil, err
 	}
 	scope := "fido-server/" + userID
-	data, err = authn.httpRequest(http.MethodPost, apiPreauthenticate, scope, data)
+	msg, err := authn.httpRequest(http.MethodPost, apiPreauthenticate, scope, data)
 	if err != nil {
 		return nil, err
 	}
-	resp := &StartSignInResp{
-		AllowCredentials: []types.PublicKeyCredentialDescriptor{},
-		Extensions:       types.AuthenticationExtensionsClientInputs{},
-	}
-	err = json.Unmarshal(data, resp)
+	resp := &StartSignInResp{}
+	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
@@ -134,13 +129,13 @@ func (authn *WebAuthn) FinishSignIn(req *http.Request) (*FinishSignInResp, error
 		return nil, err
 	}
 	scope := "fido-server/"
-	data, err = authn.httpRequest(http.MethodPost, apiAuthenticate, scope, data)
+	msg, err := authn.httpRequest(http.MethodPost, apiAuthenticate, scope, data)
 	if err != nil {
 		return nil, err
 	}
 	resp := &FinishSignInResp{}
-	_ = json.Unmarshal(data, resp)
-	return resp, nil
+	err = json.Unmarshal(msg.Data, resp)
+	return resp, err
 }
 
 // DeleteCredential delete exists credential
@@ -158,7 +153,7 @@ func (authn *WebAuthn) DestroyUser() {
 
 }
 
-func (authn *WebAuthn) httpRequest(method, path, scope string, data []byte) ([]byte, error) {
+func (authn *WebAuthn) httpRequest(method, path, scope string, data []byte) (*message.JSONRawMessage, error) {
 	var (
 		httpReq *http.Request
 		err     error
@@ -184,19 +179,13 @@ func (authn *WebAuthn) httpRequest(method, path, scope string, data []byte) ([]b
 	if err != nil {
 		return nil, err
 	}
-	if httpResp.StatusCode/100 != 2 {
-		if len(data) > 0 {
-			var resp struct {
-				Code  int    `json:"code"`
-				Error string `json:"error"`
-			}
-			err2 := json.Unmarshal(data, &resp)
-			if err2 == nil {
-				err = fmt.Errorf("code: %d, err: %s", resp.Code, resp.Error)
-			}
-		} else {
-			err = fmt.Errorf("http code: %d", httpResp.StatusCode)
-		}
+	resp := &message.JSONRawMessage{}
+	err = json.Unmarshal(data, resp)
+	if err != nil {
+		return nil, fmt.Errorf("code: %d, err: %s", resp.Code, resp.Error)
 	}
-	return data, err
+	if resp.Code != 0 {
+		return nil, errors.New(resp.Error)
+	}
+	return resp, err
 }
