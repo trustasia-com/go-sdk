@@ -2,7 +2,7 @@
 package main
 
 import (
-	"encoding/hex"
+	"encoding/base64"
 	"fmt"
 	"net/http"
 
@@ -44,7 +44,7 @@ func main() {
 		// 方式查询到用户
 		// user := ...
 
-		userID := hex.EncodeToString([]byte("test_user_id"))
+		userID := base64.RawURLEncoding.EncodeToString([]byte("test_user_id"))
 		req := webauthn.StartSignUpReq{
 			Username:    "test_username",
 			DisplayName: "test_nickname",
@@ -71,7 +71,7 @@ func main() {
 		//
 		// user := ...
 
-		userID := hex.EncodeToString([]byte("test_user_id"))
+		userID := base64.RawURLEncoding.EncodeToString([]byte("test_user_id"))
 		req := webauthn.StartSignInReq{
 			Username: "test_username",
 		}
