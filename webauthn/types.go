@@ -21,7 +21,7 @@ type StartSignUpResp struct {
 	PubKeyCredParams []types.PublicKeyCredentialParameters `json:"pubKeyCredParams"`
 	Timeout          int                                   `json:"timeout"`
 
-	ExcludeCredentials     []types.PublicKeyCredentialDescriptor      `json:"excludeCredentials"`
+	ExcludeCredentials     []types.PublicKeyCredentialDescriptor      `json:"excludeCredentials,omitempty"`
 	AuthenticatorSelection types.AuthenticatorSelectionCriteria       `json:"authenticatorSelection"`
 	Attestation            types.AttestationConveyancePreference      `json:"attestation"`
 	Extensions             types.AuthenticationExtensionsClientInputs `json:"extensions"`
@@ -58,7 +58,7 @@ type StartSignInResp struct {
 	Timeout   int    `json:"timeout"`
 	RpID      string `json:"rpId"`
 
-	AllowCredentials []types.PublicKeyCredentialDescriptor      `json:"allowCredentials"`
+	AllowCredentials []types.PublicKeyCredentialDescriptor      `json:"allowCredentials,omitempty"`
 	UserVerification types.UserVerificationRequirement          `json:"userVerification,omitempty"`
 	Extensions       types.AuthenticationExtensionsClientInputs `json:"extensions"`
 }
