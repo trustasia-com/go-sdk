@@ -1,5 +1,5 @@
-// Package types provides ...
-package types
+// Package fido provides ...
+package fido
 
 // User interface
 type User interface {

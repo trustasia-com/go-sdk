@@ -1,5 +1,5 @@
-// Package types provides ...
-package types
+// Package fido provides ...
+package fido
 
 import (
 	"github.com/trustasia-com/go-sdk/pkg/cose"

@@ -1,39 +1,39 @@
 // Package webauthn provides ...
 package webauthn
 
-import "github.com/trustasia-com/go-sdk/pkg/types"
+import "github.com/trustasia-com/go-sdk/pkg/fido"
 
 // StartSignUpReq sign up request
 type StartSignUpReq struct {
-	Username               string                                     `json:"username"`
-	DisplayName            string                                     `json:"displayName"`
-	Attestation            types.AttestationConveyancePreference      `json:"attestation"`
-	AuthenticatorSelection types.AuthenticatorSelectionCriteria       `json:"authenticatorSelection"`
-	Extensions             types.AuthenticationExtensionsClientInputs `json:"extensions"`
+	Username               string                                    `json:"username"`
+	DisplayName            string                                    `json:"displayName"`
+	Attestation            fido.AttestationConveyancePreference      `json:"attestation"`
+	AuthenticatorSelection fido.AuthenticatorSelectionCriteria       `json:"authenticatorSelection"`
+	Extensions             fido.AuthenticationExtensionsClientInputs `json:"extensions"`
 }
 
 // StartSignUpResp sign up response
 // https://www.w3.org/TR/webauthn/#dictionary-makecredentialoptions
 type StartSignUpResp struct {
-	RP               types.PublicKeyCredentialRpEntity     `json:"rp"`
-	User             types.PublicKeyCredentialUserEntity   `json:"user"`
-	Challenge        string                                `json:"challenge"`
-	PubKeyCredParams []types.PublicKeyCredentialParameters `json:"pubKeyCredParams"`
-	Timeout          int                                   `json:"timeout"`
+	RP               fido.PublicKeyCredentialRpEntity     `json:"rp"`
+	User             fido.PublicKeyCredentialUserEntity   `json:"user"`
+	Challenge        string                               `json:"challenge"`
+	PubKeyCredParams []fido.PublicKeyCredentialParameters `json:"pubKeyCredParams"`
+	Timeout          int                                  `json:"timeout"`
 
-	ExcludeCredentials     []types.PublicKeyCredentialDescriptor      `json:"excludeCredentials,omitempty"`
-	AuthenticatorSelection types.AuthenticatorSelectionCriteria       `json:"authenticatorSelection"`
-	Attestation            types.AttestationConveyancePreference      `json:"attestation"`
-	Extensions             types.AuthenticationExtensionsClientInputs `json:"extensions"`
+	ExcludeCredentials     []fido.PublicKeyCredentialDescriptor      `json:"excludeCredentials,omitempty"`
+	AuthenticatorSelection fido.AuthenticatorSelectionCriteria       `json:"authenticatorSelection"`
+	Attestation            fido.AttestationConveyancePreference      `json:"attestation"`
+	Extensions             fido.AuthenticationExtensionsClientInputs `json:"extensions"`
 }
 
 // FinishSignUpReq sign up request
 type FinishSignUpReq struct {
 	Name string `json:"name"` // 凭证/设备名称
 
-	ID       string                        `json:"id"`
-	RawID    string                        `json:"rawId"`
-	Type     types.PublicKeyCredentialType `json:"type"`
+	ID       string                       `json:"id"`
+	RawID    string                       `json:"rawId"`
+	Type     fido.PublicKeyCredentialType `json:"type"`
 	Response struct {
 		ClientDataJSON    string `json:"clientDataJSON"`
 		AttestationObject string `json:"attestationObject"`
@@ -45,10 +45,10 @@ type FinishSignUpResp struct{}
 
 // StartSignInReq sign in request
 type StartSignInReq struct {
-	Username         string                                     `json:"username"`
-	DisplayName      string                                     `json:"displayName"`
-	UserVerification types.UserVerificationRequirement          `json:"userVerification"`
-	Extensions       types.AuthenticationExtensionsClientInputs `json:"extensions"`
+	Username         string                                    `json:"username"`
+	DisplayName      string                                    `json:"displayName"`
+	UserVerification fido.UserVerificationRequirement          `json:"userVerification"`
+	Extensions       fido.AuthenticationExtensionsClientInputs `json:"extensions"`
 }
 
 // StartSignInResp sign in response
@@ -58,16 +58,16 @@ type StartSignInResp struct {
 	Timeout   int    `json:"timeout"`
 	RpID      string `json:"rpId"`
 
-	AllowCredentials []types.PublicKeyCredentialDescriptor      `json:"allowCredentials,omitempty"`
-	UserVerification types.UserVerificationRequirement          `json:"userVerification,omitempty"`
-	Extensions       types.AuthenticationExtensionsClientInputs `json:"extensions"`
+	AllowCredentials []fido.PublicKeyCredentialDescriptor      `json:"allowCredentials,omitempty"`
+	UserVerification fido.UserVerificationRequirement          `json:"userVerification,omitempty"`
+	Extensions       fido.AuthenticationExtensionsClientInputs `json:"extensions"`
 }
 
 // FinishSignInReq sign in request
 type FinishSignInReq struct {
-	ID       string                        `json:"id"`
-	RawID    string                        `json:"rawId"`
-	Type     types.PublicKeyCredentialType `json:"type"`
+	ID       string                       `json:"id"`
+	RawID    string                       `json:"rawId"`
+	Type     fido.PublicKeyCredentialType `json:"type"`
 	Response struct {
 		ClientDataJSON    string `json:"clientDataJSON"`
 		AuthenticatorData string `json:"authenticatorData"`

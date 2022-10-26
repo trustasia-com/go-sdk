@@ -1,5 +1,5 @@
-// Package types provides ...
-package types
+// Package fido provides ...
+package fido
 
 // AttestationConveyancePreference WebAuthn Relying Parties may use AttestationConveyancePreference to
 // specify their preference regarding attestation conveyance during credential generation.
