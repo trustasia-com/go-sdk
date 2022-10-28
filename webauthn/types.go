@@ -78,5 +78,5 @@ type FinishSignInReq struct {
 
 // FinishSignInResp sign in response
 type FinishSignInResp struct {
-	UserID []byte `json:"userId"`
+	UserID string `json:"userId"`
 }
