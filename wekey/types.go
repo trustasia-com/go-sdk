@@ -10,8 +10,8 @@ type RegQRCodeReq struct {
 
 // RegQRCodeResp 响应请求
 type RegQRCodeResp struct {
-	QRCode  string `json:"qr_code"`
-	Timeout int    `json:"timeout"`
+	URL       string `json:"url"`
+	ExpiresAt int64  `json:"expires_at"`
 }
 
 // RegResultReq 注册结果获取
@@ -20,7 +20,11 @@ type RegResultReq struct {
 }
 
 // RegResultResp 注册结果响应
-type RegResultResp struct{}
+type RegResultResp struct {
+	WekeyUser string `json:"wekey_user"`
+	Status    string `json:"status"`
+	Error     string `json:"error"`
+}
 
 // AuthMethod method
 type AuthMethod string
@@ -48,4 +52,9 @@ type AuthResultReq struct {
 }
 
 // AuthResultResp 认证结果响应
-type AuthResultResp struct{}
+type AuthResultResp struct {
+	WekeyUser string `json:"wekey_user"`
+	Status    string `json:"status"`
+	Error     string `json:"error"`
+	UserID    string `json:"user_id"`
+}

@@ -61,6 +61,9 @@ func (cli *HTTPClient) Request(method, path, scope string, data []byte) (*messag
 	} else {
 		httpReq, err = http.NewRequest(method, url, nil)
 	}
+	if err != nil {
+		return nil, err
+	}
 	httpReq.Header.Set("User-Agent", cli.useragent)
 	if err = cli.session.SignRequest(httpReq, scope); err != nil {
 		return nil, err

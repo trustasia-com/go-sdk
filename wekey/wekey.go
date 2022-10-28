@@ -24,6 +24,9 @@ type WeKey struct {
 	client *client.HTTPClient
 }
 
+// AuthOKCallback 认证成功回调
+type AuthOKCallback func(userID string) error
+
 // New wekey client
 func New(sess *credentials.Session) *WeKey {
 	return &WeKey{
@@ -52,18 +55,20 @@ func (we *WeKey) RegQRCode(req RegQRCodeReq) (*RegQRCodeResp, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &RegQRCodeResp{QRCode: string(msg.Data)}, nil
+	resp := &RegQRCodeResp{}
+	err = json.Unmarshal(msg.Data, resp)
+	return resp, nil
 }
 
 // RegResult 获取扫描认证结果
-func (we *WeKey) RegResult(req RegResultReq) (*RegResultResp, error) {
+func (we *WeKey) RegResult(req RegResultReq, callback AuthOKCallback) (*RegResultResp, error) {
 	if req.MsgID == "" {
 		return nil, errors.New("Need specify req.MsgID")
 	}
 
-	path := fmt.Sprintf(apiRegResult, req.MsgID)
+	path := fmt.Sprintf(apiRegResult, req.MsgID[1:])
 	scope := "wekey/"
-	msg, err := we.client.Request(http.MethodPost, path, scope, nil)
+	msg, err := we.client.Request(http.MethodGet, path, scope, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +94,7 @@ func (we *WeKey) AuthRequest(req AuthRequestReq) (*AuthRequestResp, error) {
 		return nil, err
 	}
 	scope := "wekey/"
-	msg, err := we.client.Request(http.MethodPost, apiAuthResult, scope, data)
+	msg, err := we.client.Request(http.MethodPost, apiAuthRequest, scope, data)
 	if err != nil {
 		return nil, err
 	}
@@ -99,12 +104,12 @@ func (we *WeKey) AuthRequest(req AuthRequestReq) (*AuthRequestResp, error) {
 }
 
 // AuthResult 获取认证结果
-func (we *WeKey) AuthResult(req AuthResultReq) (*AuthResultResp, error) {
+func (we *WeKey) AuthResult(req AuthResultReq, callback AuthOKCallback) (*AuthResultResp, error) {
 	if req.MsgID == "" {
 		return nil, errors.New("Need specify req.MsgID")
 	}
 
-	path := fmt.Sprintf(apiAuthResult, req.MsgID)
+	path := fmt.Sprintf(apiAuthResult, req.MsgID[1:])
 	scope := "wekey/"
 	msg, err := we.client.Request(http.MethodGet, path, scope, nil)
 	if err != nil {
@@ -112,5 +117,9 @@ func (we *WeKey) AuthResult(req AuthResultReq) (*AuthResultResp, error) {
 	}
 	resp := &AuthResultResp{}
 	err = json.Unmarshal(msg.Data, resp)
+	if err != nil {
+		return nil, err
+	}
+	err = callback(resp.UserID)
 	return resp, err
 }

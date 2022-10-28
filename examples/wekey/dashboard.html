@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.1/jquery.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+  </head>
+  <body>
+    <div>
+      用户名：
+      <p id="username"></p>
+    </div>
+    <div>
+      用户ID:
+      <p id="user_id"></p>
+    </div>
+    <div>
+      用户昵称：
+      <p id="display_name"></p>
+    </div>
+    <button id="logout" onclick="logout()">退出登录</button>
+    <br />
+    <button id="fido" onclick="addFido()">添加密钥</button>
+    <br />
+    <div alt="二维码显示" id="img-qrcode"></div>
+    <div id="tips"></div>
+  </body>
+  <script charset="utf-8">
+    function userinfo() {
+      fetch("/userinfo")
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.code !== 0) {
+            alert(data.error);
+          } else {
+            console.log(data.data);
+            $("#username").text(data.data.username);
+            $("#user_id").text(data.data.user_id);
+            $("#display_name").text(data.data.display_name);
+          }
+        })
+        .catch((error) => {
+          alert(error);
+        });
+    }
+    userinfo();
+
+    function logout() {
+      fetch("/logout");
+      location.href = "/";
+    }
+
+    function addFido() {
+      fetch("/register/qrcode")
+        .then((response) => response.json())
+        .then((resp) => {
+          let timerID;
+          if (resp.code !== 0) {
+            alert(resp.error);
+          } else {
+            $("#img-qrcode").qrcode({ text: resp.data.url });
+
+            if (timerID) {
+              clearInterval(timerID);
+            }
+            const idx = resp.data.url.indexOf("#");
+            const msgID = resp.data.url.substring(idx + 1);
+
+            timerID = setInterval(async () => {
+              const now = new Date().getTime() / 1000;
+              if (now > resp.data.expires_at) {
+                clearInterval(timerID);
+                $("#tips").text("二维码超时");
+                return;
+              }
+
+              fetch(`/register/result?msg_id=${msgID}`)
+                .then((resp) => resp.json())
+                .then((resp) => {
+                  switch (resp.data.status) {
+                    case "init":
+                      $("#tips").text("等待扫描");
+                      break;
+                    case "bind":
+                      $("#tips").text("已扫码：", resp.data.wekey_user);
+                      break;
+                    case "fail":
+                      clearInterval(timerID);
+                      $("#tips").text("认证失败，请重试");
+                      break;
+                    case "success":
+                      // 页面跳转
+                      clearInterval(timerID);
+                      alert("添加成功");
+                  }
+                })
+                .catch((error) => {
+                  clearInterval(timerID);
+                  console.log(error);
+                });
+            }, 1000);
+          }
+        })
+        .catch((error) => {
+          alert(error);
+        });
+    }
+  </script>
+</html>
