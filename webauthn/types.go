@@ -1,7 +1,10 @@
 // Package webauthn provides ...
 package webauthn
 
-import "github.com/trustasia-com/go-sdk/pkg/types"
+import (
+	"github.com/trustasia-com/go-sdk/pkg/base64url"
+	"github.com/trustasia-com/go-sdk/pkg/types"
+)
 
 // StartSignUpReq sign up request
 type StartSignUpReq struct {
@@ -78,5 +81,5 @@ type FinishSignInReq struct {
 
 // FinishSignInResp sign in response
 type FinishSignInResp struct {
-	UserID string `json:"userId"`
+	UserID base64url.Encoding `json:"userId"`
 }
