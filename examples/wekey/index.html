@@ -57,7 +57,7 @@
     function pushLogin() {
       fetch("/login/qrcode?method=push&username=username")
         .then((response) => response.json())
-        .then((data) => {
+        .then((resp) => {
           if (resp.code !== 0) {
             alert(resp.error);
           } else {
@@ -116,7 +116,7 @@
     function qrcodeLogin() {
       fetch("/login/qrcode?username=username")
         .then((response) => response.json())
-        .then((data) => {
+        .then((resp) => {
           if (resp.code !== 0) {
             alert(resp.error);
           } else {
