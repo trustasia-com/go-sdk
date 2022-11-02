@@ -13,10 +13,10 @@ import (
 
 // api list
 const (
-	apiRegQRCode   = "/ta-app/attestation/options"
-	apiRegResult   = "/ta-app/attestation/result/%s"
-	apiAuthRequest = "/ta-app/assertion/options"
-	apiAuthResult  = "/ta-app/assertion/result/%s"
+	apiRegQRCode   = "/ta-app/rp/attestation/options"
+	apiRegResult   = "/ta-app/rp/attestation/result/%s"
+	apiAuthRequest = "/ta-app/rp/assertion/options"
+	apiAuthResult  = "/ta-app/rp/assertion/result/%s"
 )
 
 // WeKey instance for wekey rp
@@ -79,7 +79,7 @@ func (we *WeKey) RegResult(req RegResultReq, callback AuthOKCallback) (*RegResul
 
 // AuthRequest 认证请求
 func (we *WeKey) AuthRequest(req AuthRequestReq) (*AuthRequestResp, error) {
-	if req.Method != AuthMethodQRCode && req.Method == AuthMethodPush {
+	if req.Method != AuthMethodQRCode && req.Method != AuthMethodPush {
 		return nil, errors.New("Invalid Auth Method")
 	}
 	if req.UserID == "" {
