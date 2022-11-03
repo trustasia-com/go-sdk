@@ -13,10 +13,12 @@ import (
 
 // api list
 const (
-	apiRegQRCode   = "/ta-app/rp/attestation/options"
-	apiRegResult   = "/ta-app/rp/attestation/result/%s"
-	apiAuthRequest = "/ta-app/rp/assertion/options"
-	apiAuthResult  = "/ta-app/rp/assertion/result/%s"
+	apiRegQRCode     = "/ta-app/rp/attestation/options"
+	apiRegResult     = "/ta-app/rp/attestation/result/%s"
+	apiAuthRequest   = "/ta-app/rp/assertion/options"
+	apiAuthResult    = "/ta-app/rp/assertion/result/%s"
+	apiCredentials   = "/ta-app/rp/credentials?user_id=%s"
+	apiCredentialDel = "/ta-app/rp/credentials"
 )
 
 // WeKey instance for wekey rp
@@ -121,5 +123,42 @@ func (we *WeKey) AuthResult(req AuthResultReq, callback AuthOKCallback) (*AuthRe
 		return nil, err
 	}
 	err = callback(resp.UserID)
+	return resp, err
+}
+
+// UserCredentials 用户凭证列表
+func (we *WeKey) UserCredentials(req UserCredentialsReq) (*UserCredentialsResp, error) {
+	if req.UserID == "" {
+		return nil, errors.New("Need specify req.UserID")
+	}
+
+	path := fmt.Sprintf(apiCredentials, req.UserID)
+	scope := "wekey/"
+	msg, err := we.client.Request(http.MethodGet, path, scope, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp := &UserCredentialsResp{}
+	err = json.Unmarshal(msg.Data, resp)
+	return resp, err
+}
+
+// DeleteCredential 删除用户凭证
+func (we *WeKey) DeleteCredential(req DeleteCredentialReq) (*DeleteCredentialResp, error) {
+	if req.UserID == "" {
+		return nil, errors.New("Need specify req.UserID")
+	}
+	if req.CredID == "" {
+		return nil, errors.New("Need specify req.CredID")
+	}
+
+	data, err := json.Marshal(req)
+	scope := "wekey/"
+	msg, err := we.client.Request(http.MethodDelete, apiCredentialDel, scope, data)
+	if err != nil {
+		return nil, err
+	}
+	resp := &DeleteCredentialResp{}
+	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
 }

@@ -1,6 +1,8 @@
 // Package wekey provides ...
 package wekey
 
+import "time"
+
 // RegQRCodeReq 注册请求
 type RegQRCodeReq struct {
 	UserID      string `json:"user_id"`
@@ -58,3 +60,31 @@ type AuthResultResp struct {
 	Error     string `json:"error"`
 	UserID    string `json:"user_id"`
 }
+
+// UserCredentialsReq 获取凭证列表请求
+type UserCredentialsReq struct {
+	UserID string `json:"user_id"`
+}
+
+// Credential 凭证
+type Credential struct {
+	CredID   string `json:"cred_id"`   // 凭证ID
+	CredName string `json:"cred_name"` // 凭证名称
+
+	UpdatedAt time.Time `json:"updated_at"` // 最近使用
+}
+
+// UserCredentialsResp 凭证列表响应
+type UserCredentialsResp struct {
+	List  []Credential `json:"list"`
+	Total int64        `json:"total"`
+}
+
+// DeleteCredentialReq 删除用户凭证请求
+type DeleteCredentialReq struct {
+	UserID string `json:"user_id"` // 用户ID
+	CredID string `json:"cred_id"` // 凭证ID
+}
+
+// DeleteCredentialResp 删除响应
+type DeleteCredentialResp struct{}
