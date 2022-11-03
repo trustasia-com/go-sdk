@@ -1,5 +1,5 @@
-// Package types provides ...
-package types
+// Package fido provides ...
+package fido
 
 // AuthenticationExtensionsClientInputs An extension defines one or two request arguments. The client
 // extension input, which is a value that can be encoded in JSON, is passed from the WebAuthn Relying Party

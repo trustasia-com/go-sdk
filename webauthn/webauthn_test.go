@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/trustasia-com/go-sdk/pkg/credentials"
-	"github.com/trustasia-com/go-sdk/pkg/types"
+	"github.com/trustasia-com/go-sdk/pkg/fido"
 )
 
 var (
@@ -56,9 +56,9 @@ func TestStartSignUp(t *testing.T) {
 	req := StartSignUpReq{
 		Username:    u.Name(),
 		DisplayName: u.DisplayName(),
-		Attestation: types.PreferenceDirect,
-		AuthenticatorSelection: types.AuthenticatorSelectionCriteria{
-			UserVerification:   types.VerificationPreferred,
+		Attestation: fido.PreferenceDirect,
+		AuthenticatorSelection: fido.AuthenticatorSelectionCriteria{
+			UserVerification:   fido.VerificationPreferred,
 			RequireResidentKey: &rk,
 		},
 	}

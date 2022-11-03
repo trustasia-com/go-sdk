@@ -1,5 +1,5 @@
-// Package types provides ...
-package types
+// Package fido provides ...
+package fido
 
 // AuthenticatorAttachment This enumeration’s values describe authenticators' attachment modalities.
 // Relying Parties use this to express a preferred authenticator attachment modality when calling

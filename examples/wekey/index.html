@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Index</title>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.1/jquery.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+  </head>
+  <body>
+    用户名: <input type="text" name="用户名" id="username" />
+    <br />
+    密码: <input type="text" name="用户名" id="password" />
+    <br />
+    <button id="login" onclick="commonLogin()">模拟登录</button>
+    <br />
+    用户名: username
+    <button style="margin-top: 16px" id="login-push" onclick="pushLogin()">
+      推送登录
+    </button>
+    <br />
+    用户名: username
+    <button style="margin-top: 16px" id="login-qrcode" onclick="qrcodeLogin()">
+      二维码登录
+    </button>
+    <br />
+    <div alt="二维码显示" id="img-qrcode"></div>
+    <div id="tips"></div>
+  </body>
+  <script charset="utf-8">
+    let timerID;
+    function commonLogin() {
+      fetch("/login")
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.code !== 0) {
+            alert(data.error);
+          } else {
+            const username = $("#username").val();
+            if (!username) {
+              alert("请输入用户名");
+              return;
+            }
+            const password = $("#password").val();
+            if (!password) {
+              alert("请输入密码");
+              return;
+            }
+            location.href = "/dashboard";
+          }
+        })
+        .catch((error) => {
+          alert(error);
+        });
+    }
+
+    function pushLogin() {
+      fetch("/login/qrcode?method=push&username=username")
+        .then((response) => response.json())
+        .then((resp) => {
+          if (resp.code !== 0) {
+            alert(resp.error);
+          } else {
+            console.log(resp);
+            alert("推送成功");
+
+            if (timerID) {
+              clearInterval(timerID);
+            }
+            const idx = qrcode.url.indexOf("#");
+            const msgID = qrcode.url.substring(idx + 1);
+
+            timerID = setInterval(async () => {
+              const now = new Date().getTime() / 1000;
+              if (now > qrcode.expires_at) {
+                clearInterval(timerID);
+                // TODO 超时，ui change;
+                console.log("扫码超时");
+                return;
+              }
+              try {
+                const result = await client.RegResult(`/login/result/${msgID}`);
+
+                switch (result.status) {
+                  case "init":
+                    // nothing todo
+                    console.log("等待扫描");
+                    break;
+                  case "bind":
+                    // TODO 已扫码，ui change
+                    console.log("已扫码：", result.wekey_user);
+                    break;
+                  case "fail":
+                    // TODO ui change
+                    clearInterval(timerID);
+                    console.log("认证失败，请重试");
+                    break;
+                  case "success":
+                    // 页面跳转
+                    clearInterval(timerID);
+                    console.log("login success");
+                }
+              } catch (error) {
+                clearInterval(timerID);
+                console.log(error);
+                return;
+              }
+            }, 1000);
+          }
+        })
+        .catch((error) => {
+          alert(error);
+        });
+    }
+
+    function qrcodeLogin() {
+      fetch("/login/qrcode?username=username")
+        .then((response) => response.json())
+        .then((resp) => {
+          if (resp.code !== 0) {
+            alert(resp.error);
+          } else {
+            $("#img-qrcode").qrcode({ text: resp.data.url });
+
+            if (timerID) {
+              clearInterval(timerID);
+            }
+            const idx = qrcode.url.indexOf("#");
+            const msgID = qrcode.url.substring(idx + 1);
+
+            timerID = setInterval(async () => {
+              const now = new Date().getTime() / 1000;
+              if (now > qrcode.expires_at) {
+                clearInterval(timerID);
+                $("#tips").text("二维码超时");
+                return;
+              }
+              try {
+                const result = await client.RegResult(
+                  `/login/result?msg_id=${msgID}`
+                );
+
+                switch (result.status) {
+                  case "init":
+                    $("#tips").text("等待扫描");
+                    break;
+                  case "bind":
+                    $("#tips").text("已扫码：", resp.data.wekey_user);
+                    break;
+                  case "fail":
+                    clearInterval(timerID);
+                    $("#tips").text("认证失败，请重试");
+                    break;
+                  case "success":
+                    // 页面跳转
+                    clearInterval(timerID);
+                    alert("登录成功");
+                    location.href = "/dashbaord";
+                }
+              } catch (error) {
+                clearInterval(timerID);
+                console.log(error);
+                return;
+              }
+            }, 1000);
+          }
+        })
+        .catch((error) => {
+          alert(error);
+        });
+    }
+  </script>
+</html>
