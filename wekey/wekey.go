@@ -148,7 +148,7 @@ func (we *WeKey) DeleteCredential(req DeleteCredentialReq) (*DeleteCredentialRes
 	if req.UserID == "" {
 		return nil, errors.New("Need specify req.UserID")
 	}
-	if req.CredID == "" {
+	if len(req.CredentialIDs) == 0 {
 		return nil, errors.New("Need specify req.CredID")
 	}
 

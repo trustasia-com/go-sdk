@@ -68,10 +68,12 @@ type UserCredentialsReq struct {
 
 // Credential 凭证
 type Credential struct {
-	CredID   string `json:"cred_id"`   // 凭证ID
-	CredName string `json:"cred_name"` // 凭证名称
+	CredentialID   string `json:"credential_id"`   // 凭证ID
+	CredentialName string `json:"credential_name"` // 凭证名称
 
+	UserID    string    `json:"user_id"`
 	UpdatedAt time.Time `json:"updated_at"` // 最近使用
+	CreatedAt time.Time `json:"created_at"` // 添加时间
 }
 
 // UserCredentialsResp 凭证列表响应
@@ -82,8 +84,8 @@ type UserCredentialsResp struct {
 
 // DeleteCredentialReq 删除用户凭证请求
 type DeleteCredentialReq struct {
-	UserID string `json:"user_id"` // 用户ID
-	CredID string `json:"cred_id"` // 凭证ID
+	UserID        string   `json:"user_id"`        // 用户ID
+	CredentialIDs []string `json:"credential_ids"` // 凭证ID
 }
 
 // DeleteCredentialResp 删除响应
