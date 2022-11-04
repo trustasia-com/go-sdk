@@ -11,6 +11,11 @@ import (
 	"github.com/trustasia-com/go-sdk/pkg/credentials"
 )
 
+// 认证结果状态
+const (
+	AuthorizeStatusSuccess = "success"
+)
+
 // api list
 const (
 	apiRegQRCode     = "/ta-app/rp/attestation/options"
@@ -59,7 +64,7 @@ func (we *WeKey) RegQRCode(req RegQRCodeReq) (*RegQRCodeResp, error) {
 	}
 	resp := &RegQRCodeResp{}
 	err = json.Unmarshal(msg.Data, resp)
-	return resp, nil
+	return resp, err
 }
 
 // RegResult 获取扫描认证结果
@@ -122,7 +127,9 @@ func (we *WeKey) AuthResult(req AuthResultReq, callback AuthOKCallback) (*AuthRe
 	if err != nil {
 		return nil, err
 	}
-	err = callback(resp.UserID)
+	if resp.Status == AuthorizeStatusSuccess {
+		err = callback(resp.UserID)
+	}
 	return resp, err
 }
 

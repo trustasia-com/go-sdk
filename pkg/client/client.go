@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -14,6 +13,7 @@ import (
 	"github.com/trustasia-com/go-sdk/pkg"
 	"github.com/trustasia-com/go-sdk/pkg/credentials"
 	"github.com/trustasia-com/go-sdk/pkg/message"
+	"github.com/trustasia-com/go-van/pkg/codes/status"
 )
 
 // HTTPClient http client
@@ -84,7 +84,7 @@ func (cli *HTTPClient) Request(method, path, scope string, data []byte) (*messag
 		return nil, err
 	}
 	if msg.Code != 0 {
-		return nil, fmt.Errorf("(%d)%s", msg.Code, msg.Error)
+		return nil, status.Err(msg.Code, msg.Error)
 	}
 	return msg, nil
 }

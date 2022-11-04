@@ -46,6 +46,8 @@ type AuthRequestReq struct {
 
 // AuthRequestResp 认证请求响应
 type AuthRequestResp struct {
+	URL       string `json:"url"`
+	ExpiresAt int64  `json:"expires_at"`
 }
 
 // AuthResultReq 认证结果
