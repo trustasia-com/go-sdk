@@ -5,6 +5,8 @@ import "time"
 
 // RegQRCodeReq 注册请求
 type RegQRCodeReq struct {
+	CredentialName string `json:"credential_name"`
+
 	UserID      string `json:"user_id"`
 	Username    string `json:"username"`
 	DisplayName string `json:"display_name"`

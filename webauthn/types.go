@@ -13,6 +13,7 @@ type StartSignUpReq struct {
 	Attestation            fido.AttestationConveyancePreference      `json:"attestation"`
 	AuthenticatorSelection fido.AuthenticatorSelectionCriteria       `json:"authenticatorSelection"`
 	Extensions             fido.AuthenticationExtensionsClientInputs `json:"extensions"`
+	CredentialName         string                                    `json:"credentialName"`
 }
 
 // StartSignUpResp sign up response
@@ -32,8 +33,6 @@ type StartSignUpResp struct {
 
 // FinishSignUpReq sign up request
 type FinishSignUpReq struct {
-	Name string `json:"name"` // 凭证/设备名称
-
 	ID       string                       `json:"id"`
 	RawID    string                       `json:"rawId"`
 	Type     fido.PublicKeyCredentialType `json:"type"`
