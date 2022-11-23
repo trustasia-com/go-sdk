@@ -2,7 +2,6 @@
 package finance
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -27,16 +26,14 @@ const (
 // Finance instance for RP
 type Finance struct {
 	userAgent string
-	sess      *credentials.Session
-	client    *http.Client
+	client    *client.HTTPClient
 }
 
 // New new Finance instance
 func New(sess *credentials.Session) *Finance {
 	return &Finance{
 		userAgent: pkg.BuildUserAgent(),
-		sess:      sess,
-		client:    client.NewHTTPClient(),
+		client:    client.NewHTTPClient(sess),
 	}
 }
 
@@ -63,12 +60,12 @@ func (f *Finance) PaymentList(req PaymentListReq) (*PaymentListResp, error) {
 		vals.Add("search", v)
 	}
 	scope := "finance/"
-	data, err := f.httpRequest(http.MethodGet, apiPaymentsList+"?"+vals.Encode(), scope, nil)
+	msg, err := f.client.Request(http.MethodGet, apiPaymentsList+"?"+vals.Encode(), scope, nil)
 	if err != nil {
 		return nil, err
 	}
 	resp := &PaymentListResp{}
-	err = json.Unmarshal(data, resp)
+	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
@@ -102,12 +99,12 @@ func (f *Finance) PaymentCreate(req PaymentCreateReq) (*PaymentCreateResp, error
 		return nil, err
 	}
 	scope := "finance/"
-	data, err = f.httpRequest(http.MethodPost, apiPaymentsCreate, scope, data)
+	msg, err := f.client.Request(http.MethodPost, apiPaymentsCreate, scope, data)
 	if err != nil {
 		return nil, err
 	}
 	resp := &PaymentCreateResp{}
-	err = json.Unmarshal(data, resp)
+	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
@@ -120,12 +117,12 @@ func (f *Finance) PaymentRefund(req PaymentRefundReq) (*PaymentRefundResp, error
 
 	path := fmt.Sprintln(apiPaymentsRefund, req.PaymentID)
 	scope := "finance/"
-	data, err := f.httpRequest(http.MethodPut, path, scope, nil)
+	msg, err := f.client.Request(http.MethodPut, path, scope, nil)
 	if err != nil {
 		return nil, err
 	}
 	resp := &PaymentRefundResp{}
-	err = json.Unmarshal(data, resp)
+	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
@@ -146,7 +143,7 @@ func (f *Finance) FinanceCallback(r *http.Request) (*CallbackFinanceReq, error) 
 	vals.Set("do", string(req.Do))
 	vals.Set("nonce", req.Nonce)
 	vals.Set("content", string(req.Content))
-	if req.Sign != f.sess.SumHMAC([]byte(vals.Encode())) {
+	if req.Sign != f.client.Session.SumHMAC([]byte(vals.Encode())) {
 		return nil, errors.New("failed to validate signature")
 	}
 	return req, nil
@@ -170,52 +167,11 @@ func (f *Finance) SubscribeCreate(req SubscribeCreateReq) (*SubscribeCreateResp,
 		return nil, err
 	}
 	scope := "finance/"
-	data, err = f.httpRequest(http.MethodPost, apiSubscribeCreate, scope, data)
+	msg, err := f.client.Request(http.MethodPost, apiSubscribeCreate, scope, data)
 	if err != nil {
 		return nil, err
 	}
 	resp := &SubscribeCreateResp{}
-	err = json.Unmarshal(data, resp)
+	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
-}
-
-func (f *Finance) httpRequest(method, path, scope string, data []byte) ([]byte, error) {
-	var (
-		httpReq *http.Request
-		err     error
-	)
-	url := f.sess.Options.Endpoint + path
-	if len(data) > 0 {
-		httpReq, err = http.NewRequest(method, url, bytes.NewReader(data))
-	} else {
-		httpReq, err = http.NewRequest(method, url, nil)
-	}
-	httpReq.Header.Set("User-Agent", f.userAgent)
-
-	if err = f.sess.SignRequest(httpReq, scope); err != nil {
-		return nil, err
-	}
-	httpResp, err := f.client.Do(httpReq)
-	if err != nil {
-		return nil, err
-	}
-	defer httpResp.Body.Close()
-
-	data, err = io.ReadAll(httpResp.Body)
-	if err != nil {
-		return nil, err
-	}
-	var msg struct {
-		Code  int             `json:"code"`
-		Data  json.RawMessage `json:"data"`
-		Error string          `json:"error"`
-	}
-	err = json.Unmarshal(data, &msg)
-	if err != nil {
-		return nil, err
-	}
-	if msg.Code != 0 {
-		return nil, errors.New(msg.Error)
-	}
-	return msg.Data, nil
 }

@@ -18,7 +18,7 @@ import (
 
 // HTTPClient http client
 type HTTPClient struct {
-	session *credentials.Session
+	Session *credentials.Session
 	*http.Client
 	useragent string
 }
@@ -26,7 +26,7 @@ type HTTPClient struct {
 // NewHTTPClient new http client
 func NewHTTPClient(sess *credentials.Session) *HTTPClient {
 	cli := &HTTPClient{
-		session:   sess,
+		Session:   sess,
 		useragent: pkg.BuildUserAgent(),
 	}
 	cli.Client = &http.Client{
@@ -55,7 +55,7 @@ func (cli *HTTPClient) Request(method, path, scope string, data []byte) (*messag
 		httpReq *http.Request
 		err     error
 	)
-	url := cli.session.Options.Endpoint + path
+	url := cli.Session.Options.Endpoint + path
 	if len(data) > 0 {
 		httpReq, err = http.NewRequest(method, url, bytes.NewReader(data))
 	} else {
@@ -65,7 +65,7 @@ func (cli *HTTPClient) Request(method, path, scope string, data []byte) (*messag
 		return nil, err
 	}
 	httpReq.Header.Set("User-Agent", cli.useragent)
-	if err = cli.session.SignRequest(httpReq, scope); err != nil {
+	if err = cli.Session.SignRequest(httpReq, scope); err != nil {
 		return nil, err
 	}
 	httpResp, err := cli.Do(httpReq)
