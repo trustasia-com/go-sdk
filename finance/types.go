@@ -89,6 +89,18 @@ type CallbackFinanceReq struct {
 	Sign string `json:"sign"`
 }
 
+// CallbackContent 回调内容
+type CallbackContent struct {
+	BusinessCode string    `json:"business_code"`
+	OrderID      string    `json:"order_id"`
+	UserID       string    `json:"user_id"`
+	Amount       int       `json:"amount"`
+	Class        string    `json:"class"`
+	Note         string    `json:"note"`
+	ProductID    string    `json:"product_id"`
+	EffctedAt    time.Time `json:"effcted_at"` // 产生时间：付款时间内/退款时间
+}
+
 // SubscribeCreateReq 创建订阅单
 type SubscribeCreateReq struct {
 	UserID   string `json:"user_id"`
