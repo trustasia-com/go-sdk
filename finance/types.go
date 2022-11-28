@@ -100,6 +100,7 @@ type CallbackContent struct {
 	Note         string    `json:"note"`          // 备注
 	ProductID    string    `json:"product_id"`    // 产品ID
 	EffctedAt    time.Time `json:"effcted_at"`    // 产生时间：付款时间内/退款时间
+	PayChan      string    `json:"pay_chan"`      // 支付渠道
 }
 
 // SubscribeCreateReq 创建订阅单
