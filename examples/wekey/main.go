@@ -74,9 +74,15 @@ func main() {
 		})
 	})
 	// auth
-	e.GET("/login/qrcode", func(c *gin.Context) {
-		username := c.Query("username")
-		if username != u.Username {
+	e.POST("/login/qrcode", func(c *gin.Context) {
+		var req struct {
+			Username string `json:"username" binding:"required"`
+		}
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.String(http.StatusBadRequest, "invalid username")
+			return
+		}
+		if req.Username != u.Username {
 			c.String(http.StatusBadRequest, "user not exists")
 			return
 		}
@@ -85,12 +91,12 @@ func main() {
 		if c.Query("method") == "push" {
 			method = wekey.AuthMethodPush
 		}
-		req := wekey.AuthRequestReq{
+		sdkreq := wekey.AuthRequestReq{
 			Method:   method,
 			UserID:   u.UserID,
 			Username: u.Username,
 		}
-		resp, err := client.AuthRequest(req)
+		resp, err := client.AuthRequest(sdkreq)
 		if err != nil {
 			c.String(http.StatusBadRequest, err.Error())
 			return
@@ -137,7 +143,7 @@ func main() {
 			"data": u,
 		})
 	})
-	e.GET("/register/qrcode", func(c *gin.Context) {
+	e.POST("/register/qrcode", func(c *gin.Context) {
 		uid := c.Keys["uid"].(string)
 
 		req := wekey.RegQRCodeReq{

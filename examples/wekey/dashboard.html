@@ -53,7 +53,9 @@
     }
 
     function addFido() {
-      fetch("/register/qrcode")
+      fetch("/register/qrcode", {
+        method: "POST",
+      })
         .then((response) => response.json())
         .then((resp) => {
           let timerID;
