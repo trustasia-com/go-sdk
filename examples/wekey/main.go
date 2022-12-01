@@ -2,7 +2,6 @@
 package main
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/trustasia-com/go-sdk/pkg/credentials"
@@ -162,18 +161,11 @@ func main() {
 		})
 	})
 	e.GET("/register/result", func(c *gin.Context) {
-		uid := c.Keys["uid"].(string)
-
 		req := wekey.RegResultReq{
 			MsgID: c.Query("msg_id"),
 		}
 		resp, err := client.RegResult(req, func(userID string) error {
-			if userID != uid {
-				return errors.New("user id not equal")
-			}
-			session := sessions.Default(c)
-			session.Set("user_id", uid)
-			session.Save()
+			// TODO something
 			return nil
 		})
 		if err != nil {
