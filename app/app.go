@@ -57,7 +57,7 @@ func (a *App) RegQRCode(req RegQRCodeReq) (*RegQRCodeResp, error) {
 	if err != nil {
 		return nil, err
 	}
-	scope := "wekey/"
+	scope := "app/"
 	msg, err := a.client.Request(http.MethodPost, apiRegQRCode, scope, data)
 	if err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (a *App) RegResult(req RegResultReq, callback AuthOKCallback) (*RegResultRe
 	}
 
 	path := fmt.Sprintf(apiRegResult, req.MsgID[1:])
-	scope := "wekey/"
+	scope := "app/"
 	msg, err := a.client.Request(http.MethodGet, path, scope, nil)
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func (a *App) AuthRequest(req AuthRequestReq) (*AuthRequestResp, error) {
 	if err != nil {
 		return nil, err
 	}
-	scope := "wekey/"
+	scope := "app/"
 	msg, err := a.client.Request(http.MethodPost, apiAuthRequest, scope, data)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,7 @@ func (a *App) AuthResult(req AuthResultReq, callback AuthOKCallback) (*AuthResul
 	}
 
 	path := fmt.Sprintf(apiAuthResult, req.MsgID[1:])
-	scope := "wekey/"
+	scope := "app/"
 	msg, err := a.client.Request(http.MethodGet, path, scope, nil)
 	if err != nil {
 		return nil, err
@@ -140,7 +140,7 @@ func (a *App) UserCredentials(req UserCredentialsReq) (*UserCredentialsResp, err
 	}
 
 	path := fmt.Sprintf(apiCredentials, req.UserID)
-	scope := "wekey/"
+	scope := "app/"
 	msg, err := a.client.Request(http.MethodGet, path, scope, nil)
 	if err != nil {
 		return nil, err
@@ -160,7 +160,7 @@ func (a *App) DeleteCredential(req DeleteCredentialReq) (*DeleteCredentialResp, 
 	}
 
 	data, err := json.Marshal(req)
-	scope := "wekey/"
+	scope := "app/"
 	msg, err := a.client.Request(http.MethodDelete, apiCredentialDel, scope, data)
 	if err != nil {
 		return nil, err
