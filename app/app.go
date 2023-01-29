@@ -1,5 +1,5 @@
-// Package wekey provides ...
-package wekey
+// Package app provides ...
+package app
 
 import (
 	"encoding/json"
@@ -26,8 +26,8 @@ const (
 	apiCredentialDel = "/ta-app/rp/credentials"
 )
 
-// WeKey instance for wekey rp
-type WeKey struct {
+// App instance for wekey rp
+type App struct {
 	client *client.HTTPClient
 }
 
@@ -35,14 +35,14 @@ type WeKey struct {
 type AuthOKCallback func(userID string) error
 
 // New wekey client
-func New(sess *credentials.Session) *WeKey {
-	return &WeKey{
+func New(sess *credentials.Session) *App {
+	return &App{
 		client: client.NewHTTPClient(sess),
 	}
 }
 
 // RegQRCode 获取注册扫描二维码
-func (we *WeKey) RegQRCode(req RegQRCodeReq) (*RegQRCodeResp, error) {
+func (a *App) RegQRCode(req RegQRCodeReq) (*RegQRCodeResp, error) {
 	if req.UserID == "" {
 		return nil, errors.New("Need specify req.UserID")
 	}
@@ -58,7 +58,7 @@ func (we *WeKey) RegQRCode(req RegQRCodeReq) (*RegQRCodeResp, error) {
 		return nil, err
 	}
 	scope := "wekey/"
-	msg, err := we.client.Request(http.MethodPost, apiRegQRCode, scope, data)
+	msg, err := a.client.Request(http.MethodPost, apiRegQRCode, scope, data)
 	if err != nil {
 		return nil, err
 	}
@@ -68,14 +68,14 @@ func (we *WeKey) RegQRCode(req RegQRCodeReq) (*RegQRCodeResp, error) {
 }
 
 // RegResult 获取扫描认证结果
-func (we *WeKey) RegResult(req RegResultReq, callback AuthOKCallback) (*RegResultResp, error) {
+func (a *App) RegResult(req RegResultReq, callback AuthOKCallback) (*RegResultResp, error) {
 	if req.MsgID == "" {
 		return nil, errors.New("Need specify req.MsgID")
 	}
 
 	path := fmt.Sprintf(apiRegResult, req.MsgID[1:])
 	scope := "wekey/"
-	msg, err := we.client.Request(http.MethodGet, path, scope, nil)
+	msg, err := a.client.Request(http.MethodGet, path, scope, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (we *WeKey) RegResult(req RegResultReq, callback AuthOKCallback) (*RegResul
 }
 
 // AuthRequest 认证请求
-func (we *WeKey) AuthRequest(req AuthRequestReq) (*AuthRequestResp, error) {
+func (a *App) AuthRequest(req AuthRequestReq) (*AuthRequestResp, error) {
 	if req.Method != AuthMethodQRCode && req.Method != AuthMethodPush {
 		return nil, errors.New("Invalid Auth Method")
 	}
@@ -101,7 +101,7 @@ func (we *WeKey) AuthRequest(req AuthRequestReq) (*AuthRequestResp, error) {
 		return nil, err
 	}
 	scope := "wekey/"
-	msg, err := we.client.Request(http.MethodPost, apiAuthRequest, scope, data)
+	msg, err := a.client.Request(http.MethodPost, apiAuthRequest, scope, data)
 	if err != nil {
 		return nil, err
 	}
@@ -111,14 +111,14 @@ func (we *WeKey) AuthRequest(req AuthRequestReq) (*AuthRequestResp, error) {
 }
 
 // AuthResult 获取认证结果
-func (we *WeKey) AuthResult(req AuthResultReq, callback AuthOKCallback) (*AuthResultResp, error) {
+func (a *App) AuthResult(req AuthResultReq, callback AuthOKCallback) (*AuthResultResp, error) {
 	if req.MsgID == "" {
 		return nil, errors.New("Need specify req.MsgID")
 	}
 
 	path := fmt.Sprintf(apiAuthResult, req.MsgID[1:])
 	scope := "wekey/"
-	msg, err := we.client.Request(http.MethodGet, path, scope, nil)
+	msg, err := a.client.Request(http.MethodGet, path, scope, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -134,14 +134,14 @@ func (we *WeKey) AuthResult(req AuthResultReq, callback AuthOKCallback) (*AuthRe
 }
 
 // UserCredentials 用户凭证列表
-func (we *WeKey) UserCredentials(req UserCredentialsReq) (*UserCredentialsResp, error) {
+func (a *App) UserCredentials(req UserCredentialsReq) (*UserCredentialsResp, error) {
 	if req.UserID == "" {
 		return nil, errors.New("Need specify req.UserID")
 	}
 
 	path := fmt.Sprintf(apiCredentials, req.UserID)
 	scope := "wekey/"
-	msg, err := we.client.Request(http.MethodGet, path, scope, nil)
+	msg, err := a.client.Request(http.MethodGet, path, scope, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (we *WeKey) UserCredentials(req UserCredentialsReq) (*UserCredentialsResp, 
 }
 
 // DeleteCredential 删除用户凭证
-func (we *WeKey) DeleteCredential(req DeleteCredentialReq) (*DeleteCredentialResp, error) {
+func (a *App) DeleteCredential(req DeleteCredentialReq) (*DeleteCredentialResp, error) {
 	if req.UserID == "" {
 		return nil, errors.New("Need specify req.UserID")
 	}
@@ -161,7 +161,7 @@ func (we *WeKey) DeleteCredential(req DeleteCredentialReq) (*DeleteCredentialRes
 
 	data, err := json.Marshal(req)
 	scope := "wekey/"
-	msg, err := we.client.Request(http.MethodDelete, apiCredentialDel, scope, data)
+	msg, err := a.client.Request(http.MethodDelete, apiCredentialDel, scope, data)
 	if err != nil {
 		return nil, err
 	}

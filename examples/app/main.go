@@ -4,8 +4,8 @@ package main
 import (
 	"net/http"
 
+	"github.com/trustasia-com/go-sdk/app"
 	"github.com/trustasia-com/go-sdk/pkg/credentials"
-	"github.com/trustasia-com/go-sdk/wekey"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -41,7 +41,7 @@ func main() {
 		panic(err)
 	}
 	// create client
-	client := wekey.New(sess)
+	client := app.New(sess)
 
 	e := gin.Default()
 	e.LoadHTMLGlob("./*.html")
@@ -86,11 +86,11 @@ func main() {
 			return
 		}
 
-		method := wekey.AuthMethodQRCode
+		method := app.AuthMethodQRCode
 		if c.Query("method") == "push" {
-			method = wekey.AuthMethodPush
+			method = app.AuthMethodPush
 		}
-		sdkreq := wekey.AuthRequestReq{
+		sdkreq := app.AuthRequestReq{
 			Method:   method,
 			UserID:   u.UserID,
 			Username: u.Username,
@@ -106,7 +106,7 @@ func main() {
 		})
 	})
 	e.GET("/login/result", func(c *gin.Context) {
-		req := wekey.AuthResultReq{
+		req := app.AuthResultReq{
 			MsgID: c.Query("msg_id"),
 		}
 		resp, err := client.AuthResult(req, func(userID string) error {
@@ -145,7 +145,7 @@ func main() {
 	e.POST("/register/qrcode", func(c *gin.Context) {
 		uid := c.Keys["uid"].(string)
 
-		req := wekey.RegQRCodeReq{
+		req := app.RegQRCodeReq{
 			DisplayName: u.DisplayName,
 			UserID:      uid,
 			Username:    u.Username,
@@ -161,7 +161,7 @@ func main() {
 		})
 	})
 	e.GET("/register/result", func(c *gin.Context) {
-		req := wekey.RegResultReq{
+		req := app.RegResultReq{
 			MsgID: c.Query("msg_id"),
 		}
 		resp, err := client.RegResult(req, func(userID string) error {

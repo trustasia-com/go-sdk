@@ -1,5 +1,5 @@
-// Package wekey provides ...
-package wekey
+// Package app provides ...
+package app
 
 import "time"
 
