@@ -18,6 +18,10 @@ const (
 
 // api list
 const (
+	// app管理
+	apiCreateOrUpdateApp = "/ta-app/rp/app"
+	apiDeleteApp         = "/ta-app/rp/app"
+
 	apiRegQRCode     = "/ta-app/rp/attestation/options"
 	apiRegResult     = "/ta-app/rp/attestation/result/%s"
 	apiAuthRequest   = "/ta-app/rp/assertion/options"
@@ -41,16 +45,50 @@ func New(sess *credentials.Session) *App {
 	}
 }
 
+// CreateOrUpdateApp 创建应用
+func (a *App) CreateOrUpdateApp(req CreateOrUpdateAppReq) error {
+	if req.Slug == "" {
+		return errors.New("Need specify req.Slug")
+	}
+	if req.Name == "" {
+		return errors.New("Need specify req.Name")
+	}
+	if req.RpInfo.RpID == "" {
+		return errors.New("Need specify req.RpInfo.RpID")
+	}
+	if len(req.RpInfo.Origins) == 0 {
+		return errors.New("Need specify req.RpInfo.Origins")
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+	scope := "app/"
+	_, err = a.client.Request(http.MethodPost, apiCreateOrUpdateApp, scope, data)
+	return err
+}
+
+// DeleteApp 更新应用
+func (a *App) DeleteApp(req DeleteAppReq) error {
+	if req.Slug == "" {
+		return errors.New("Need specify req.Slug")
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+	scope := "app/"
+	_, err = a.client.Request(http.MethodDelete, apiDeleteApp, scope, data)
+	return err
+}
+
 // RegQRCode 获取注册扫描二维码
 func (a *App) RegQRCode(req RegQRCodeReq) (*RegQRCodeResp, error) {
-	if req.UserID == "" {
-		return nil, errors.New("Need specify req.UserID")
+	if req.Slug == "" {
+		return nil, errors.New("Need specify req.Slug")
 	}
-	if req.Username == "" {
-		return nil, errors.New("Need specify req.Username")
-	}
-	if req.DisplayName == "" {
-		return nil, errors.New("Need specify req.DisplayName")
+	if req.CredentialName == "" {
+		return nil, errors.New("Need specify req.CredentialName")
 	}
 
 	data, err := json.Marshal(req)
@@ -89,11 +127,8 @@ func (a *App) AuthRequest(req AuthRequestReq) (*AuthRequestResp, error) {
 	if req.Method != AuthMethodQRCode && req.Method != AuthMethodPush {
 		return nil, errors.New("Invalid Auth Method")
 	}
-	if req.UserID == "" {
-		return nil, errors.New("Need specify req.UserID")
-	}
-	if req.Username == "" {
-		return nil, errors.New("Need specify req.Username")
+	if req.Slug == "" {
+		return nil, errors.New("Need specify req.Slug")
 	}
 
 	data, err := json.Marshal(req)

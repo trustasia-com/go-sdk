@@ -67,28 +67,29 @@
             if (timerID) {
               clearInterval(timerID);
             }
-            const idx = qrcode.url.indexOf("#");
-            const msgID = qrcode.url.substring(idx + 1);
+            const idx = resp.data.url.indexOf("#");
+            const msgID = resp.data.url.substring(idx + 1);
 
             timerID = setInterval(async () => {
               const now = new Date().getTime() / 1000;
-              if (now > qrcode.expires_at) {
+              if (now > resp.data.expires_at) {
                 clearInterval(timerID);
                 // TODO 超时，ui change;
                 console.log("扫码超时");
                 return;
               }
               try {
-                const result = await client.RegResult(`/login/result/${msgID}`);
-
-                switch (result.status) {
+                fetch(`/login/result/${msgID}`)
+                .then(resp=>resp.json())
+                .then(resp=>{
+                  switch (resp.status) {
                   case "init":
                     // nothing todo
                     console.log("等待扫描");
                     break;
                   case "bind":
                     // TODO 已扫码，ui change
-                    console.log("已扫码：", result.wekey_user);
+                    console.log("已扫码：", resp.wekey_user);
                     break;
                   case "fail":
                     // TODO ui change
@@ -99,7 +100,8 @@
                     // 页面跳转
                     clearInterval(timerID);
                     console.log("login success");
-                }
+                  }
+                })
               } catch (error) {
                 clearInterval(timerID);
                 console.log(error);
@@ -128,22 +130,21 @@
             if (timerID) {
               clearInterval(timerID);
             }
-            const idx = qrcode.url.indexOf("#");
-            const msgID = qrcode.url.substring(idx + 1);
+            const idx = resp.data.url.indexOf("#");
+            const msgID = resp.data.url.substring(idx + 1);
 
             timerID = setInterval(async () => {
               const now = new Date().getTime() / 1000;
-              if (now > qrcode.expires_at) {
+              if (now > resp.data.expires_at) {
                 clearInterval(timerID);
                 $("#tips").text("二维码超时");
                 return;
               }
               try {
-                const result = await client.RegResult(
-                  `/login/result?msg_id=${msgID}`
-                );
-
-                switch (result.status) {
+                fetch(`/login/result?msg_id=${msgID}`)
+                .then(resp=>resp.json())
+                .then(resp=>{
+                  switch (result.status) {
                   case "init":
                     $("#tips").text("等待扫描");
                     break;
@@ -159,7 +160,8 @@
                     clearInterval(timerID);
                     alert("登录成功");
                     location.href = "/dashbaord";
-                }
+                  }
+                })
               } catch (error) {
                 clearInterval(timerID);
                 console.log(error);

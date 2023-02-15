@@ -3,13 +3,38 @@ package app
 
 import "time"
 
+// RpInfo rp info
+type RpInfo struct {
+	RpID        string   `json:"rp_id"`         // 租户唯一, sso.example.com
+	Origins     []string `json:"origins"`       // eg. https://sso.example.com
+	Icon        string   `json:"icon"`          // eg. url, 过时
+	RpPolicy    int      `json:"rp_pilicy"`     // rp严格校验模式
+	RpAllowList []string `json:"rp_allow_list"` // 允许列表
+}
+
+// CreateOrUpdateAppReq 创建请求
+type CreateOrUpdateAppReq struct {
+	Slug    string `json:"slug"`
+	Name    string `json:"name"`
+	ExLogin bool   `json:"ex_login"`
+
+	RpInfo RpInfo `json:"rp_info"`
+}
+
+// DeleteAppReq 删除请求
+type DeleteAppReq struct {
+	Slug string `json:"slug"`
+}
+
+/////////////////////////////////////
+
 // RegQRCodeReq 注册请求
 type RegQRCodeReq struct {
+	Slug           string `json:"slug"`
 	CredentialName string `json:"credential_name"`
 
-	UserID      string `json:"user_id"`
-	Username    string `json:"username"`
-	DisplayName string `json:"display_name"`
+	RpUserID   string `json:"rp_user_id"`
+	RpUsername string `json:"rp_username"`
 }
 
 // RegQRCodeResp 响应请求
@@ -25,9 +50,9 @@ type RegResultReq struct {
 
 // RegResultResp 注册结果响应
 type RegResultResp struct {
-	WekeyUser string `json:"wekey_user"`
-	Status    string `json:"status"`
-	Error     string `json:"error"`
+	Username string `json:"username"`
+	Status   string `json:"status"`
+	Error    string `json:"error"`
 }
 
 // AuthMethod method
@@ -41,9 +66,11 @@ const (
 
 // AuthRequestReq 认证请求
 type AuthRequestReq struct {
-	Method   AuthMethod `json:"method"`
-	UserID   string     `json:"user_id"`
-	Username string     `json:"username"`
+	Slug   string     `json:"slug"`
+	Method AuthMethod `json:"method"`
+
+	RpUserID   string `json:"rp_user_id"`
+	RpUsername string `json:"rp_username"`
 }
 
 // AuthRequestResp 认证请求响应
@@ -59,10 +86,10 @@ type AuthResultReq struct {
 
 // AuthResultResp 认证结果响应
 type AuthResultResp struct {
-	WekeyUser string `json:"wekey_user"`
-	Status    string `json:"status"`
-	Error     string `json:"error"`
-	UserID    string `json:"user_id"`
+	Username string `json:"username"`
+	Status   string `json:"status"`
+	Error    string `json:"error"`
+	UserID   string `json:"user_id"`
 }
 
 // UserCredentialsReq 获取凭证列表请求
