@@ -86,7 +86,7 @@
                       $("#tips").text("等待扫描");
                       break;
                     case "bind":
-                      $("#tips").text("已扫码：", resp.data.wekey_user);
+                      $("#tips").text("已扫码：", resp.data.username);
                       break;
                     case "fail":
                       clearInterval(timerID);
