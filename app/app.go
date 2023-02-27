@@ -28,6 +28,8 @@ const (
 	apiAuthResult    = "/ta-app/rp/assertion/result/%s"
 	apiCredentials   = "/ta-app/rp/credentials?user_id=%s"
 	apiCredentialDel = "/ta-app/rp/credentials"
+	apiCosignInfo    = "/ta-app/rp/cosign?slug=%s&rp_user_id=%s"
+	apiCosignDelete  = "/ta-app/rp/cosign"
 )
 
 // App instance for wekey rp
@@ -124,7 +126,7 @@ func (a *App) RegResult(req RegResultReq, callback AuthOKCallback) (*RegResultRe
 
 // AuthRequest 认证请求
 func (a *App) AuthRequest(req AuthRequestReq) (*AuthRequestResp, error) {
-	if req.Method != AuthMethodQRCode && req.Method != AuthMethodPush {
+	if req.Type != TypeFidoScan && req.Type != TypeCosignScan {
 		return nil, errors.New("Invalid Auth Method")
 	}
 	if req.Slug == "" {
@@ -163,18 +165,18 @@ func (a *App) AuthResult(req AuthResultReq, callback AuthOKCallback) (*AuthResul
 		return nil, err
 	}
 	if resp.Status == AuthorizeStatusSuccess {
-		err = callback(resp.UserID)
+		err = callback(resp.RpUserID)
 	}
 	return resp, err
 }
 
 // UserCredentials 用户凭证列表
 func (a *App) UserCredentials(req UserCredentialsReq) (*UserCredentialsResp, error) {
-	if req.UserID == "" {
+	if req.RpUserID == "" {
 		return nil, errors.New("Need specify req.UserID")
 	}
 
-	path := fmt.Sprintf(apiCredentials, req.UserID)
+	path := fmt.Sprintf(apiCredentials, req.RpUserID)
 	scope := "app/"
 	msg, err := a.client.Request(http.MethodGet, path, scope, nil)
 	if err != nil {
@@ -187,7 +189,7 @@ func (a *App) UserCredentials(req UserCredentialsReq) (*UserCredentialsResp, err
 
 // DeleteCredential 删除用户凭证
 func (a *App) DeleteCredential(req DeleteCredentialReq) (*DeleteCredentialResp, error) {
-	if req.UserID == "" {
+	if req.RpUserID == "" {
 		return nil, errors.New("Need specify req.UserID")
 	}
 	if len(req.CredentialIDs) == 0 {
@@ -195,12 +197,53 @@ func (a *App) DeleteCredential(req DeleteCredentialReq) (*DeleteCredentialResp, 
 	}
 
 	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
 	scope := "app/"
 	msg, err := a.client.Request(http.MethodDelete, apiCredentialDel, scope, data)
 	if err != nil {
 		return nil, err
 	}
 	resp := &DeleteCredentialResp{}
+	err = json.Unmarshal(msg.Data, resp)
+	return resp, err
+}
+
+// UserCosignList 用户协同凭证列表
+func (a *App) UserCosignList(req CosignListReq) (*CosignListResp, error) {
+	if req.RpUserID == "" {
+		return nil, errors.New("Need specify req.RpUserID")
+	}
+	path := fmt.Sprintf(apiCosignInfo, req.Slug, req.RpUserID)
+	scope := "app/"
+	msg, err := a.client.Request(http.MethodGet, path, scope, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp := &CosignListResp{}
+	err = json.Unmarshal(msg.Data, resp)
+	return resp, err
+}
+
+// UserCosignDelete 删除协同凭证
+func (a *App) UserCosignDelete(req CosignDeleteReq) (*CosignDeleteResp, error) {
+	if req.RpUserID == "" {
+		return nil, errors.New("Need specify req.RpUserID")
+	}
+	if req.UserID == "" {
+		return nil, errors.New("Need specify req.UserID")
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	scope := "app/"
+	msg, err := a.client.Request(http.MethodDelete, apiCosignDelete, scope, data)
+	if err != nil {
+		return nil, err
+	}
+	resp := &CosignDeleteResp{}
 	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
 }

@@ -26,15 +26,25 @@ type DeleteAppReq struct {
 	Slug string `json:"slug"`
 }
 
-/////////////////////////////////////
+/////////////////////////////////////////////
+
+// TypeAuth 认证类型
+type TypeAuth string
+
+// 类型
+const (
+	TypeFidoScan   TypeAuth = "fido-scan"
+	TypeCosignScan          = "cosign-scan"
+)
 
 // RegQRCodeReq 注册请求
 type RegQRCodeReq struct {
-	Slug           string `json:"slug"`
-	CredentialName string `json:"credential_name"`
+	Slug string   `json:"slug"`
+	Type TypeAuth `json:"type"`
 
-	RpUserID   string `json:"rp_user_id"`
-	RpUsername string `json:"rp_username"`
+	CredentialName string `json:"credential_name"`
+	RpUserID       string `json:"rp_user_id"`
+	RpUsername     string `json:"rp_username"`
 }
 
 // RegQRCodeResp 响应请求
@@ -50,24 +60,15 @@ type RegResultReq struct {
 
 // RegResultResp 注册结果响应
 type RegResultResp struct {
-	Username string `json:"username"`
+	Username string `json:"username"` // 扫码用户名
 	Status   string `json:"status"`
 	Error    string `json:"error"`
 }
 
-// AuthMethod method
-type AuthMethod string
-
-// authmethod list
-const (
-	AuthMethodQRCode AuthMethod = "qrcode"
-	AuthMethodPush   AuthMethod = "push"
-)
-
 // AuthRequestReq 认证请求
 type AuthRequestReq struct {
-	Slug   string     `json:"slug"`
-	Method AuthMethod `json:"method"`
+	Slug string   `json:"slug"`
+	Type TypeAuth `json:"type"`
 
 	RpUserID   string `json:"rp_user_id"`
 	RpUsername string `json:"rp_username"`
@@ -87,14 +88,18 @@ type AuthResultReq struct {
 // AuthResultResp 认证结果响应
 type AuthResultResp struct {
 	Username string `json:"username"`
+	RpUserID string `json:"rp_user_id"`
 	Status   string `json:"status"`
 	Error    string `json:"error"`
-	UserID   string `json:"user_id"`
 }
+
+/////////////////////////////////////////////
 
 // UserCredentialsReq 获取凭证列表请求
 type UserCredentialsReq struct {
-	UserID string `json:"user_id"`
+	Slug string `json:"slug"`
+
+	RpUserID string `json:"rp_user_id"`
 }
 
 // Credential 凭证
@@ -115,9 +120,40 @@ type UserCredentialsResp struct {
 
 // DeleteCredentialReq 删除用户凭证请求
 type DeleteCredentialReq struct {
-	UserID        string   `json:"user_id"`        // 用户ID
+	Slug string `json:"slug"`
+
+	RpUserID      string   `json:"rp_user_id"`     // 用户ID
 	CredentialIDs []string `json:"credential_ids"` // 凭证ID
 }
 
 // DeleteCredentialResp 删除响应
 type DeleteCredentialResp struct{}
+
+// CosignListReq 协同列表
+type CosignListReq struct {
+	Slug string `json:"slug"`
+
+	RpUserID string `json:"rp_user_id"`
+}
+
+// CosignListResp 响应
+type CosignListResp struct {
+}
+
+// CosignInfo 信息
+type CosignInfo struct {
+	UserID    string    `json:"user_id"`
+	Name      string    `json:"name"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+// CosignDeleteReq 删除
+type CosignDeleteReq struct {
+	Slug string `json:"slug"`
+
+	RpUserID string `json:"rp_user_id"`
+	UserID   string `json:"user_id"` // app用户ID
+}
+
+// CosignDeleteResp 响应
+type CosignDeleteResp struct{}

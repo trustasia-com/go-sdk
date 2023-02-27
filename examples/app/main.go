@@ -149,13 +149,13 @@ func handleLoginQrCode(c *gin.Context) {
 		return
 	}
 
-	method := app.AuthMethodQRCode
-	if c.Query("method") == "push" {
-		method = app.AuthMethodPush
+	typ := app.TypeFidoScan
+	if c.Query("type") == "cosign" {
+		typ = app.TypeCosignScan
 	}
 	sdkreq := app.AuthRequestReq{
-		Slug:   "wekey-dev",
-		Method: method,
+		Slug: "wekey-dev",
+		Type: typ,
 
 		RpUserID:   u.UserID,
 		RpUsername: u.Username,
