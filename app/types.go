@@ -136,15 +136,16 @@ type CosignListReq struct {
 	RpUserID string `json:"rp_user_id"`
 }
 
-// CosignListResp 响应
-type CosignListResp struct {
-}
-
 // CosignInfo 信息
 type CosignInfo struct {
 	UserID    string    `json:"user_id"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
+}
+
+// CosignListResp 响应
+type CosignListResp struct {
+	List []CosignInfo `json:"list"`
 }
 
 // CosignDeleteReq 删除
