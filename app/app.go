@@ -18,18 +18,14 @@ const (
 
 // api list
 const (
-	// app管理
-	apiCreateOrUpdateApp = "/ta-app/rp/app"
-	apiDeleteApp         = "/ta-app/rp/app"
-
-	apiRegQRCode     = "/ta-app/rp/attestation/options"
-	apiRegResult     = "/ta-app/rp/attestation/result/%s"
-	apiAuthRequest   = "/ta-app/rp/assertion/options"
-	apiAuthResult    = "/ta-app/rp/assertion/result/%s"
-	apiCredentials   = "/ta-app/rp/credentials?user_id=%s"
-	apiCredentialDel = "/ta-app/rp/credentials"
-	apiCosignInfo    = "/ta-app/rp/cosign?slug=%s&rp_user_id=%s"
-	apiCosignDelete  = "/ta-app/rp/cosign"
+	apiCosignPreBind          = "/ta-app/sdk/cosign/pre-bind"
+	apiCosignBind             = "/ta-app/sdk/cosign/bind?msg_id=%s"
+	apiCosignPreLogin         = "/ta-app/sdk/cosign/pre-login"
+	apiCosignLogin            = "/ta-app/sdk/cosign/login?msg_id=%s"
+	apiCosignPreSign          = "/ta-app/sdk/cosign/pre-sign"
+	apiCosignSign             = "/ta-app/sdk/cosign/sign?msg_id=%s"
+	apiCosignCredentials      = "/ta-app/sdk/cosign/credentials?rp_user_id=%s&page=%d&size=%d"
+	apiCosignCredentialDelete = "/ta-app/sdk/cosign/credentials/%s"
 )
 
 // App instance for wekey rp
@@ -47,50 +43,16 @@ func New(sess *credentials.Session) *App {
 	}
 }
 
-// CreateOrUpdateApp 创建应用
-func (a *App) CreateOrUpdateApp(req CreateOrUpdateAppReq) error {
-	if req.Slug == "" {
-		return errors.New("Need specify req.Slug")
+// BindQRCode 获取注册扫描二维码
+func (a *App) BindQRCode(req BindQRCodeReq) (*BindQRCodeResp, error) {
+	if req.RpUserDisplayName == "" {
+		return nil, errors.New("No DisplayName found")
 	}
-	if req.Name == "" {
-		return errors.New("Need specify req.Name")
+	if req.RpUserID == "" {
+		return nil, errors.New("No UserID found")
 	}
-	if req.RpInfo.RpID == "" {
-		return errors.New("Need specify req.RpInfo.RpID")
-	}
-	if len(req.RpInfo.Origins) == 0 {
-		return errors.New("Need specify req.RpInfo.Origins")
-	}
-	data, err := json.Marshal(req)
-	if err != nil {
-		return err
-	}
-	scope := "app/"
-	_, err = a.client.Request(http.MethodPost, apiCreateOrUpdateApp, scope, data)
-	return err
-}
-
-// DeleteApp 更新应用
-func (a *App) DeleteApp(req DeleteAppReq) error {
-	if req.Slug == "" {
-		return errors.New("Need specify req.Slug")
-	}
-	data, err := json.Marshal(req)
-	if err != nil {
-		return err
-	}
-	scope := "app/"
-	_, err = a.client.Request(http.MethodDelete, apiDeleteApp, scope, data)
-	return err
-}
-
-// RegQRCode 获取注册扫描二维码
-func (a *App) RegQRCode(req RegQRCodeReq) (*RegQRCodeResp, error) {
-	if req.Slug == "" {
-		return nil, errors.New("Need specify req.Slug")
-	}
-	if req.CredentialName == "" {
-		return nil, errors.New("Need specify req.CredentialName")
+	if !req.ClientType.isValid() {
+		return nil, errors.New("ClientType is invalid")
 	}
 
 	data, err := json.Marshal(req)
@@ -98,39 +60,36 @@ func (a *App) RegQRCode(req RegQRCodeReq) (*RegQRCodeResp, error) {
 		return nil, err
 	}
 	scope := "app/"
-	msg, err := a.client.Request(http.MethodPost, apiRegQRCode, scope, data)
+	msg, err := a.client.Request(http.MethodPost, apiCosignPreBind, scope, data)
 	if err != nil {
 		return nil, err
 	}
-	resp := &RegQRCodeResp{}
+	resp := &BindQRCodeResp{}
 	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
-// RegResult 获取扫描认证结果
-func (a *App) RegResult(req RegResultReq, callback AuthOKCallback) (*RegResultResp, error) {
+// BindResult 获取扫描认证结果
+func (a *App) BindResult(req BindResultReq, callback AuthOKCallback) (*BindResultResp, error) {
 	if req.MsgID == "" {
-		return nil, errors.New("Need specify req.MsgID")
+		return nil, errors.New("No MsgID found")
 	}
 
-	path := fmt.Sprintf(apiRegResult, req.MsgID[1:])
+	path := fmt.Sprintf(apiCosignBind, req.MsgID)
 	scope := "app/"
 	msg, err := a.client.Request(http.MethodGet, path, scope, nil)
 	if err != nil {
 		return nil, err
 	}
-	resp := &RegResultResp{}
+	resp := &BindResultResp{}
 	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
-// AuthRequest 认证请求
-func (a *App) AuthRequest(req AuthRequestReq) (*AuthRequestResp, error) {
-	if req.Type != TypeFidoScan && req.Type != TypeCosignScan {
-		return nil, errors.New("Invalid Auth Method")
-	}
-	if req.Slug == "" {
-		return nil, errors.New("Need specify req.Slug")
+// LoginQRCode 认证请求
+func (a *App) LoginQRCode(req LoginQRCodeReq) (*LoginQRCodeResp, error) {
+	if !req.ClientType.isValid() {
+		return nil, errors.New("ClientType is invalid")
 	}
 
 	data, err := json.Marshal(req)
@@ -138,28 +97,28 @@ func (a *App) AuthRequest(req AuthRequestReq) (*AuthRequestResp, error) {
 		return nil, err
 	}
 	scope := "app/"
-	msg, err := a.client.Request(http.MethodPost, apiAuthRequest, scope, data)
+	msg, err := a.client.Request(http.MethodPost, apiCosignPreLogin, scope, data)
 	if err != nil {
 		return nil, err
 	}
-	resp := &AuthRequestResp{}
+	resp := &LoginQRCodeResp{}
 	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
-// AuthResult 获取认证结果
-func (a *App) AuthResult(req AuthResultReq, callback AuthOKCallback) (*AuthResultResp, error) {
+// LoginResult 获取认证结果
+func (a *App) LoginResult(req LoginResultReq, callback AuthOKCallback) (*LoginResultResp, error) {
 	if req.MsgID == "" {
-		return nil, errors.New("Need specify req.MsgID")
+		return nil, errors.New("No MsgID found")
 	}
 
-	path := fmt.Sprintf(apiAuthResult, req.MsgID[1:])
+	path := fmt.Sprintf(apiCosignLogin, req.MsgID)
 	scope := "app/"
 	msg, err := a.client.Request(http.MethodGet, path, scope, nil)
 	if err != nil {
 		return nil, err
 	}
-	resp := &AuthResultResp{}
+	resp := &LoginResultResp{}
 	err = json.Unmarshal(msg.Data, resp)
 	if err != nil {
 		return nil, err
@@ -170,30 +129,13 @@ func (a *App) AuthResult(req AuthResultReq, callback AuthOKCallback) (*AuthResul
 	return resp, err
 }
 
-// UserCredentials 用户凭证列表
-func (a *App) UserCredentials(req UserCredentialsReq) (*UserCredentialsResp, error) {
-	if req.RpUserID == "" {
-		return nil, errors.New("Need specify req.UserID")
+// SignRequest 签名请求
+func (a *App) SignRequest(req SignRequestReq) (*SignRequestResp, error) {
+	if !req.ClientType.isValid() {
+		return nil, errors.New("ClientType is invalid")
 	}
-
-	path := fmt.Sprintf(apiCredentials, req.RpUserID)
-	scope := "app/"
-	msg, err := a.client.Request(http.MethodGet, path, scope, nil)
-	if err != nil {
-		return nil, err
-	}
-	resp := &UserCredentialsResp{}
-	err = json.Unmarshal(msg.Data, resp)
-	return resp, err
-}
-
-// DeleteCredential 删除用户凭证
-func (a *App) DeleteCredential(req DeleteCredentialReq) (*DeleteCredentialResp, error) {
-	if req.RpUserID == "" {
-		return nil, errors.New("Need specify req.UserID")
-	}
-	if len(req.CredentialIDs) == 0 {
-		return nil, errors.New("Need specify req.CredID")
+	if len(req.Data) == 0 {
+		return nil, errors.New("No Data found")
 	}
 
 	data, err := json.Marshal(req)
@@ -201,49 +143,69 @@ func (a *App) DeleteCredential(req DeleteCredentialReq) (*DeleteCredentialResp, 
 		return nil, err
 	}
 	scope := "app/"
-	msg, err := a.client.Request(http.MethodDelete, apiCredentialDel, scope, data)
+	msg, err := a.client.Request(http.MethodPost, apiCosignPreSign, scope, data)
 	if err != nil {
 		return nil, err
 	}
-	resp := &DeleteCredentialResp{}
+	resp := &SignRequestResp{}
 	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
-// UserCosignList 用户协同凭证列表
-func (a *App) UserCosignList(req CosignListReq) (*CosignListResp, error) {
-	if req.RpUserID == "" {
-		return nil, errors.New("Need specify req.RpUserID")
+// SignResult 签名结果
+func (a *App) SignResult(req SignResultReq) (*SignResultResp, error) {
+	if req.MsgID == "" {
+		return nil, errors.New("No MsgID found")
 	}
-	path := fmt.Sprintf(apiCosignInfo, req.Slug, req.RpUserID)
+
+	path := fmt.Sprintf(apiCosignSign, req.MsgID)
 	scope := "app/"
 	msg, err := a.client.Request(http.MethodGet, path, scope, nil)
 	if err != nil {
 		return nil, err
 	}
-	resp := &CosignListResp{}
+	resp := &SignResultResp{}
+	err = json.Unmarshal(msg.Data, resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, err
+}
+
+// CosignCredentials 用户协同凭证列表
+func (a *App) CosignCredentials(req CredentialsReq) (*CredentialsResp, error) {
+	if req.RpUserID == "" {
+		return nil, errors.New("Need specify req.RpUserID")
+	}
+	if req.Page < 1 {
+		req.Page = 1
+	}
+	if req.Size < 1 {
+		req.Size = 10
+	}
+	path := fmt.Sprintf(apiCosignCredentials, req.RpUserID, req.Page, req.Size)
+	scope := "app/"
+	msg, err := a.client.Request(http.MethodGet, path, scope, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp := &CredentialsResp{}
 	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
 }
 
-// UserCosignDelete 删除协同凭证
-func (a *App) UserCosignDelete(req CosignDeleteReq) (*CosignDeleteResp, error) {
-	if req.RpUserID == "" {
-		return nil, errors.New("Need specify req.RpUserID")
+// CredentialDelete 删除协同凭证
+func (a *App) CredentialDelete(req CredentialDeleteReq) (*CredentialDeleteResp, error) {
+	if req.ID == "" {
+		return nil, errors.New("Need specify req.ID")
 	}
-	if req.UserID == "" {
-		return nil, errors.New("Need specify req.UserID")
-	}
-	data, err := json.Marshal(req)
-	if err != nil {
-		return nil, err
-	}
+	path := fmt.Sprintf(apiCosignCredentialDelete, req.ID)
 	scope := "app/"
-	msg, err := a.client.Request(http.MethodDelete, apiCosignDelete, scope, data)
+	msg, err := a.client.Request(http.MethodDelete, path, scope, nil)
 	if err != nil {
 		return nil, err
 	}
-	resp := &CosignDeleteResp{}
+	resp := &CredentialDeleteResp{}
 	err = json.Unmarshal(msg.Data, resp)
 	return resp, err
 }

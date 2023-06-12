@@ -13,11 +13,11 @@
     密码: <input type="text" name="用户名" id="password" />
     <br />
     <button id="login" onclick="commonLogin()">模拟登录</button>
-    <br />
+    <!-- <br />
     用户名: username
     <button style="margin-top: 16px" id="login-push" onclick="pushLogin()">
       推送登录
-    </button>
+    </button> -->
     <br />
     用户名: username
     <button style="margin-top: 16px" id="login-qrcode" onclick="qrcodeLogin()">
@@ -54,66 +54,67 @@
         });
     }
 
-    function pushLogin() {
-      fetch("/login/qrcode?method=push&username=username")
-        .then((response) => response.json())
-        .then((resp) => {
-          if (resp.code !== 0) {
-            alert(resp.error);
-          } else {
-            console.log(resp);
-            alert("推送成功");
+    // function pushLogin() {
+    //   fetch("/login/qrcode?method=push&username=username")
+    //     .then((response) => response.json())
+    //     .then((resp) => {
+    //       if (resp.code !== 0) {
+    //         alert(resp.error);
+    //       } else {
+    //         console.log(resp);
+    //         alert("推送成功");
 
-            if (timerID) {
-              clearInterval(timerID);
-            }
-            const idx = resp.data.url.indexOf("#");
-            const msgID = resp.data.url.substring(idx + 1);
+    //         if (timerID) {
+    //           clearInterval(timerID);
+    //         }
 
-            timerID = setInterval(async () => {
-              const now = new Date().getTime() / 1000;
-              if (now > resp.data.expires_at) {
-                clearInterval(timerID);
-                // TODO 超时，ui change;
-                console.log("扫码超时");
-                return;
-              }
-              try {
-                fetch(`/login/result/${msgID}`)
-                .then(resp=>resp.json())
-                .then(resp=>{
-                  switch (resp.status) {
-                  case "init":
-                    // nothing todo
-                    console.log("等待扫描");
-                    break;
-                  case "bind":
-                    // TODO 已扫码，ui change
-                    console.log("已扫码：", resp.username);
-                    break;
-                  case "fail":
-                    // TODO ui change
-                    clearInterval(timerID);
-                    console.log("认证失败，请重试");
-                    break;
-                  case "success":
-                    // 页面跳转
-                    clearInterval(timerID);
-                    console.log("login success");
-                  }
-                })
-              } catch (error) {
-                clearInterval(timerID);
-                console.log(error);
-                return;
-              }
-            }, 1000);
-          }
-        })
-        .catch((error) => {
-          alert(error);
-        });
-    }
+    //         timerID = setInterval(async () => {
+    //           const now = new Date().getTime() / 1000;
+    //           if (now > resp.data.expired_at) {
+    //             clearInterval(timerID);
+    //             // TODO 超时，ui change;
+    //             console.log("扫码超时");
+    //             return;
+    //           }
+    //           try {
+    //             fetch(`/login/result?msg_id=${resp.msg_id}`)
+    //             .then(resp=>resp.json())
+    //             .then(resp=>{
+    //               switch (resp.status) {
+    //               case "init":
+    //                 // nothing todo
+    //                 console.log("等待扫描");
+    //                 break;
+    //               case "bind":
+    //                 // TODO 已扫码，ui change
+    //                 console.log("已扫码：", resp.username);
+    //                 break;
+    //               case "fail":
+    //                 // TODO ui change
+    //                 clearInterval(timerID);
+    //                 console.log("认证失败，请重试");
+    //                 break;
+    //               case "refuse":
+    //                 console.log("拒绝");
+    //                 break;
+    //               case "success":
+    //                 // 页面跳转
+    //                 clearInterval(timerID);
+    //                 console.log("login success");
+    //               }
+    //             })
+    //           } catch (error) {
+    //             clearInterval(timerID);
+    //             console.log(error);
+    //             return;
+    //           }
+    //         }, 1000);
+    //       }
+    //     })
+    //     .catch((error) => {
+    //       alert(error);
+    //     });
+    // }
 
     function qrcodeLogin() {
       fetch("/login/qrcode", {
@@ -130,18 +131,16 @@
             if (timerID) {
               clearInterval(timerID);
             }
-            const idx = resp.data.url.indexOf("#");
-            const msgID = resp.data.url.substring(idx + 1);
 
             timerID = setInterval(async () => {
               const now = new Date().getTime() / 1000;
-              if (now > resp.data.expires_at) {
+              if (now > resp.data.expired_at) {
                 clearInterval(timerID);
                 $("#tips").text("二维码超时");
                 return;
               }
               try {
-                fetch(`/login/result?msg_id=${msgID}`)
+                fetch(`/login/result?msg_id=${resp.data.msg_id}`)
                 .then(resp=>resp.json())
                 .then(resp=>{
                   switch (result.status) {

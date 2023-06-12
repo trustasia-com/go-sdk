@@ -31,8 +31,8 @@ func init() {
 	}
 	// create credential
 	opts := credentials.Options{
-		AccessKey:  "53deb68751cbbbea77d08a2dab740457",
-		SecretKey:  "eMJhAQMnsUxtsRMOFwFpA4Ncmyho9mQDaseb5uO2",
+		AccessKey:  "ce6pdnjtlntq3g6d22v0",
+		SecretKey:  "3bb5c5ab4e4801ca0cf7c77f5a996020958a71c8",
 		Endpoint:   "http://localhost:9000",
 		SignerType: credentials.SignatureDefault,
 	}
@@ -58,8 +58,6 @@ func main() {
 		c.HTML(http.StatusOK, "dashboard.html", nil)
 	})
 	e.GET("/login", handleLogin)
-	e.GET("/create-app", handleCreateOrUpdateApp)
-	e.GET("/delete-app", handleDeleteApp)
 	// auth
 	e.POST("/login/qrcode", handleLoginQrCode)
 	e.GET("/login/result", handleLoginResult)
@@ -79,39 +77,9 @@ func main() {
 	e.GET("/userinfo", handleUserinfo)
 	e.POST("/register/qrcode", handleRegisterQrCode)
 	e.GET("/register/result", handleRegisterResult)
+	e.GET("/cosign", handleCosignList)
 
 	e.Run(":3002")
-}
-
-func handleCreateOrUpdateApp(c *gin.Context) {
-	req := app.CreateOrUpdateAppReq{
-		Slug:    "test-app",
-		Name:    "Test App",
-		ExLogin: false,
-
-		RpInfo: app.RpInfo{
-			RpID:    "localhost:3002",
-			Origins: []string{"https://localhost:3002"},
-		},
-	}
-	err := client.CreateOrUpdateApp(req)
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return
-	}
-	c.String(http.StatusOK, "")
-}
-
-func handleDeleteApp(c *gin.Context) {
-	req := app.DeleteAppReq{
-		Slug: "test-app",
-	}
-	err := client.DeleteApp(req)
-	if err != nil {
-		c.String(http.StatusBadRequest, err.Error())
-		return
-	}
-	c.String(http.StatusOK, "")
 }
 
 // 模拟直接登录
@@ -149,18 +117,10 @@ func handleLoginQrCode(c *gin.Context) {
 		return
 	}
 
-	typ := app.TypeFidoScan
-	if c.Query("type") == "cosign" {
-		typ = app.TypeCosignScan
+	sdkreq := app.LoginQRCodeReq{
+		ClientType: app.ClientTypeWeb,
 	}
-	sdkreq := app.AuthRequestReq{
-		Slug: "wekey-dev",
-		Type: typ,
-
-		RpUserID:   u.UserID,
-		RpUsername: u.Username,
-	}
-	resp, err := client.AuthRequest(sdkreq)
+	resp, err := client.LoginQRCode(sdkreq)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
@@ -172,10 +132,10 @@ func handleLoginQrCode(c *gin.Context) {
 }
 
 func handleLoginResult(c *gin.Context) {
-	req := app.AuthResultReq{
+	req := app.LoginResultReq{
 		MsgID: c.Query("msg_id"),
 	}
-	resp, err := client.AuthResult(req, func(userID string) error {
+	resp, err := client.LoginResult(req, func(userID string) error {
 		session := sessions.Default(c)
 		session.Set("user_id", userID)
 		session.Save()
@@ -201,14 +161,12 @@ func handleUserinfo(c *gin.Context) {
 func handleRegisterQrCode(c *gin.Context) {
 	uid := c.Keys["uid"].(string)
 
-	req := app.RegQRCodeReq{
-		Slug:           "wekey-dev",
-		CredentialName: "test-cred",
-
-		RpUserID: uid,
-		// RpUsername: "",
+	req := app.BindQRCodeReq{
+		ClientType:        app.ClientTypeWeb,
+		RpUserID:          uid,
+		RpUserDisplayName: "hello",
 	}
-	resp, err := client.RegQRCode(req)
+	resp, err := client.BindQRCode(req)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return
@@ -220,13 +178,28 @@ func handleRegisterQrCode(c *gin.Context) {
 }
 
 func handleRegisterResult(c *gin.Context) {
-	req := app.RegResultReq{
+	req := app.BindResultReq{
 		MsgID: c.Query("msg_id"),
 	}
-	resp, err := client.RegResult(req, func(userID string) error {
+	resp, err := client.BindResult(req, func(userID string) error {
 		// TODO something
 		return nil
 	})
+	if err != nil {
+		c.String(http.StatusBadRequest, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, map[string]interface{}{
+		"code": 0,
+		"data": resp,
+	})
+}
+
+func handleCosignList(c *gin.Context) {
+	req := app.CredentialsReq{
+		RpUserID: "akfjasl",
+	}
+	resp, err := client.CosignCredentials(req)
 	if err != nil {
 		c.String(http.StatusBadRequest, err.Error())
 		return

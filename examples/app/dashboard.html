@@ -67,18 +67,16 @@
             if (timerID) {
               clearInterval(timerID);
             }
-            const idx = resp.data.url.indexOf("#");
-            const msgID = resp.data.url.substring(idx + 1);
 
             timerID = setInterval(async () => {
               const now = new Date().getTime() / 1000;
-              if (now > resp.data.expires_at) {
+              if (now > resp.data.expired_at) {
                 clearInterval(timerID);
                 $("#tips").text("二维码超时");
                 return;
               }
 
-              fetch(`/register/result?msg_id=${msgID}`)
+              fetch(`/register/result?msg_id=${resp.data.msg_id}`)
                 .then((resp) => resp.json())
                 .then((resp) => {
                   switch (resp.data.status) {

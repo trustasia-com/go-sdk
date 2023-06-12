@@ -3,158 +3,138 @@ package app
 
 import "time"
 
-// RpInfo rp info
-type RpInfo struct {
-	RpID        string   `json:"rp_id"`         // 租户唯一, sso.example.com
-	Origins     []string `json:"origins"`       // eg. https://sso.example.com
-	Icon        string   `json:"icon"`          // eg. url, 过时
-	RpPolicy    int      `json:"rp_pilicy"`     // rp严格校验模式
-	RpAllowList []string `json:"rp_allow_list"` // 允许列表
-}
-
-// CreateOrUpdateAppReq 创建请求
-type CreateOrUpdateAppReq struct {
-	Slug    string `json:"slug"`
-	Name    string `json:"name"`
-	ExLogin bool   `json:"ex_login"`
-
-	RpInfo RpInfo `json:"rp_info"`
-}
-
-// DeleteAppReq 删除请求
-type DeleteAppReq struct {
-	Slug string `json:"slug"`
-}
-
-/////////////////////////////////////////////
-
-// TypeAuth 认证类型
-type TypeAuth string
+// AuthMethod 认证类型
+type AuthMethod string
 
 // 类型
 const (
-	TypeFidoScan   TypeAuth = "fido-scan"
-	TypeCosignScan          = "cosign-scan"
+	TypeFidoScan   AuthMethod = "fido-scan"
+	TypeCosignScan AuthMethod = "cosign-scan"
 )
 
-// RegQRCodeReq 注册请求
-type RegQRCodeReq struct {
-	Slug string   `json:"slug"`
-	Type TypeAuth `json:"type"`
+// ClientType 客户端类型
+type ClientType string
 
-	CredentialName string `json:"credential_name"`
-	RpUserID       string `json:"rp_user_id"`
-	RpUsername     string `json:"rp_username"`
+func (ct ClientType) isValid() bool {
+	return ct == ClientTypeWeb || ct == ClientTypeMobile
 }
 
-// RegQRCodeResp 响应请求
-type RegQRCodeResp struct {
-	URL       string `json:"url"`
-	ExpiresAt int64  `json:"expires_at"`
+// 客户端类型
+const (
+	ClientTypeWeb    ClientType = "web"
+	ClientTypeMobile ClientType = "mobile"
+)
+
+// BindQRCodeReq 注册请求
+type BindQRCodeReq struct {
+	RpUserDisplayName string     `json:"rp_user_display_name"`
+	RpUserID          string     `json:"rp_user_id"`
+	ClientType        ClientType `json:"client_type"`
 }
 
-// RegResultReq 注册结果获取
-type RegResultReq struct {
+// BindQRCodeResp 响应请求
+type BindQRCodeResp struct {
+	ExpiredAt int64  `json:"expired_at"` // 消息过期时间
+	URL       string `json:"url"`        // 响应消息地址
+	MsgID     string `json:"msg_id"`
+}
+
+// BindResultReq 注册结果获取
+type BindResultReq struct {
 	MsgID string `json:"msg_id"`
 }
 
-// RegResultResp 注册结果响应
-type RegResultResp struct {
-	Username string `json:"username"` // 扫码用户名
-	Status   string `json:"status"`
-	Error    string `json:"error"`
+// BindResultResp 注册结果响应
+type BindResultResp struct {
+	Status string `json:"status"`
+
+	ErrorMsg      string `json:"error_msg"`
+	WekeyNickname string `json:"wekey_nickname"`
 }
 
-// AuthRequestReq 认证请求
-type AuthRequestReq struct {
-	Slug string   `json:"slug"`
-	Type TypeAuth `json:"type"`
-
-	RpUserID   string `json:"rp_user_id"`
-	RpUsername string `json:"rp_username"`
+// LoginQRCodeReq 认证请求
+type LoginQRCodeReq struct {
+	ClientType ClientType `json:"client_type"`
 }
 
-// AuthRequestResp 认证请求响应
-type AuthRequestResp struct {
-	URL       string `json:"url"`
-	ExpiresAt int64  `json:"expires_at"`
+// LoginQRCodeResp 认证请求响应
+type LoginQRCodeResp struct {
+	ExpiredAt int64  `json:"expired_at"` // 消息过期时间
+	URL       string `json:"url"`        // 响应消息地址
+	MsgID     string `json:"msg_id"`
 }
 
-// AuthResultReq 认证结果
-type AuthResultReq struct {
+// LoginResultReq 认证结果
+type LoginResultReq struct {
 	MsgID string `json:"msg_id"`
 }
 
-// AuthResultResp 认证结果响应
-type AuthResultResp struct {
-	Username string `json:"username"`
-	RpUserID string `json:"rp_user_id"`
-	Status   string `json:"status"`
-	Error    string `json:"error"`
+// LoginResultResp 认证结果响应
+type LoginResultResp struct {
+	RpUserDisplayName string `json:"rp_user_display_name"`
+	RpUserID          string `json:"rp_user_id"`
+	Status            string `json:"status"`
+	ErrorMsg          string `json:"error_msg"`
+}
+
+// SignRequestReq 签名请求
+type SignRequestReq struct {
+	ClientType  ClientType `json:"client_type"`
+	NeedPKCS7   bool       `json:"need_pkcs7"`
+	Data        string     `json:"data"`
+	CallbackURL string     `json:"callback_url"`
+}
+
+// SignRequestResp 请求响应
+type SignRequestResp struct {
+	ExpiredAt int64  `json:"expired_at"`
+	URL       string `json:"url"`
+	MsgID     string `json:"msg_id"`
+}
+
+// SignResultReq 签名结果
+type SignResultReq struct {
+	MsgID string `json:"msg_id"`
+}
+
+// SignResultResp 签名结果
+type SignResultResp struct {
+	CertPEM       string `json:"cert_pem"` // 证书pem内容
+	Data          string `json:"data"`     // 原始签名数据
+	ErrorMsg      string `json:"error_msg"`
+	PKCS7         string `json:"pkcs7"`     // PKCS7签名
+	Signature     string `json:"signature"` // 签名数据
+	Status        string `json:"status"`
+	WekeyNickname string `json:"wekey_nickname"`
 }
 
 /////////////////////////////////////////////
 
-// UserCredentialsReq 获取凭证列表请求
-type UserCredentialsReq struct {
-	Slug string `json:"slug"`
-
+// CredentialsReq 协同列表
+type CredentialsReq struct {
+	Page     int    `json:"page"`
+	Size     int    `json:"size"`
 	RpUserID string `json:"rp_user_id"`
 }
 
-// Credential 凭证
-type Credential struct {
-	CredentialID   string `json:"credential_id"`   // 凭证ID
-	CredentialName string `json:"credential_name"` // 凭证名称
-
-	UserID    string    `json:"user_id"`
-	UpdatedAt time.Time `json:"updated_at"` // 最近使用
-	CreatedAt time.Time `json:"created_at"` // 添加时间
+// CredentialInfo 信息
+type CredentialInfo struct {
+	ID            string    `json:"id"`
+	WeKeyNickname string    `json:"we_key_nickname"`
+	CertPEM       string    `json:"cert_pem"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
-// UserCredentialsResp 凭证列表响应
-type UserCredentialsResp struct {
-	List  []Credential `json:"list"`
-	Total int64        `json:"total"`
+// CredentialsResp 响应
+type CredentialsResp struct {
+	List  []CredentialInfo `json:"list"`
+	Total int              `json:"total"`
 }
 
-// DeleteCredentialReq 删除用户凭证请求
-type DeleteCredentialReq struct {
-	Slug string `json:"slug"`
-
-	RpUserID      string   `json:"rp_user_id"`     // 用户ID
-	CredentialIDs []string `json:"credential_ids"` // 凭证ID
+// CredentialDeleteReq 删除
+type CredentialDeleteReq struct {
+	ID string `json:"id" uri:"id"`
 }
 
-// DeleteCredentialResp 删除响应
-type DeleteCredentialResp struct{}
-
-// CosignListReq 协同列表
-type CosignListReq struct {
-	Slug string `json:"slug"`
-
-	RpUserID string `json:"rp_user_id"`
-}
-
-// CosignInfo 信息
-type CosignInfo struct {
-	UserID    string    `json:"user_id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-}
-
-// CosignListResp 响应
-type CosignListResp struct {
-	List []CosignInfo `json:"list"`
-}
-
-// CosignDeleteReq 删除
-type CosignDeleteReq struct {
-	Slug string `json:"slug"`
-
-	RpUserID string `json:"rp_user_id"`
-	UserID   string `json:"user_id"` // app用户ID
-}
-
-// CosignDeleteResp 响应
-type CosignDeleteResp struct{}
+// CredentialDeleteResp 响应
+type CredentialDeleteResp struct{}
