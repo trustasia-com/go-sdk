@@ -25,7 +25,7 @@ const (
 	apiCosignPreSign          = "/ta-app/sdk/cosign/pre-sign"
 	apiCosignSign             = "/ta-app/sdk/cosign/sign?msg_id=%s"
 	apiCosignCredentials      = "/ta-app/sdk/cosign/credentials?rp_user_id=%s&page=%d&size=%d"
-	apiCosignCredentialDelete = "/ta-app/sdk/cosign/credentials/%s"
+	apiCosignCredentialDelete = "/ta-app/sdk/cosign/credentials"
 )
 
 // App instance for wekey rp
@@ -196,12 +196,18 @@ func (a *App) CosignCredentials(req CredentialsReq) (*CredentialsResp, error) {
 
 // CredentialDelete 删除协同凭证
 func (a *App) CredentialDelete(req CredentialDeleteReq) (*CredentialDeleteResp, error) {
-	if req.ID == "" {
-		return nil, errors.New("Need specify req.ID")
+	if req.CertID == "" {
+		return nil, errors.New("No CertID found")
 	}
-	path := fmt.Sprintf(apiCosignCredentialDelete, req.ID)
+	if req.RpUserID == "" {
+		return nil, errors.New("No RpUserID found")
+	}
+	data, err := json.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
 	scope := "app/"
-	msg, err := a.client.Request(http.MethodDelete, path, scope, nil)
+	msg, err := a.client.Request(http.MethodDelete, apiCosignCredentialDelete, scope, data)
 	if err != nil {
 		return nil, err
 	}

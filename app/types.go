@@ -133,7 +133,8 @@ type CredentialsResp struct {
 
 // CredentialDeleteReq 删除
 type CredentialDeleteReq struct {
-	ID string `json:"id" uri:"id"`
+	RpUserID string `json:"rp_user_id"`
+	CertID   string `json:"cert_id"`
 }
 
 // CredentialDeleteResp 响应
