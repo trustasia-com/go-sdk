@@ -13,7 +13,11 @@ import (
 
 // 认证结果状态
 const (
-	AuthorizeStatusSuccess = "success"
+	AuthorizeStatusSuccess = "success" // 成功
+	AuthorizeStatusInit    = "init"    // 初始化
+	AuthorizeStatusBind    = "bind"    // 绑定
+	AuthorizeStatusRefuse  = "refuse"  // 拒绝
+	AuthorizeStatusFail    = "fail"    // 失败
 )
 
 // api list
