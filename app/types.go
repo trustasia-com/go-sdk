@@ -100,7 +100,7 @@ type SignResultReq struct {
 // SignResultResp 签名结果
 type SignResultResp struct {
 	CertPEM       string `json:"cert_pem"` // 证书pem内容
-	Data          string `json:"data"`     // 原始签名数据
+	Data          string `json:"data"`     // 原始签名数据, 16进制
 	ErrorMsg      string `json:"error_msg"`
 	PKCS7         string `json:"pkcs7"`     // PKCS7签名
 	Signature     string `json:"signature"` // 签名数据
