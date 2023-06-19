@@ -120,7 +120,7 @@ type CredentialsReq struct {
 // CredentialInfo 信息
 type CredentialInfo struct {
 	ID            string    `json:"id"`
-	WeKeyNickname string    `json:"we_key_nickname"`
+	WeKeyNickname string    `json:"wekey_nickname"`
 	CertPEM       string    `json:"cert_pem"`
 	CreatedAt     time.Time `json:"created_at"`
 }
