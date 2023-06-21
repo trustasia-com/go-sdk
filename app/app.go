@@ -200,8 +200,8 @@ func (a *App) CosignCredentials(req CredentialsReq) (*CredentialsResp, error) {
 
 // CredentialDelete 删除协同凭证
 func (a *App) CredentialDelete(req CredentialDeleteReq) (*CredentialDeleteResp, error) {
-	if req.CertID == "" {
-		return nil, errors.New("No CertID found")
+	if req.CredID == "" {
+		return nil, errors.New("No CredID found")
 	}
 	if req.RpUserID == "" {
 		return nil, errors.New("No RpUserID found")
